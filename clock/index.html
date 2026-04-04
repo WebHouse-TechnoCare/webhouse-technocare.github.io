@@ -6,10 +6,15 @@
     <title>CalcClock | Chronometer</title>
     <link rel="icon" type="image/png" href="/logo1.png">
     <style>
+        :root {
+            --gold: #d4af37;
+            --bg: #050505;
+        }
+
         body {
-            background: #050505;
-            color: #d4af37;
-            font-family: 'Helvetica Neue', sans-serif;
+            background: var(--bg);
+            color: var(--gold);
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
             height: 100vh;
             display: flex;
             flex-direction: column;
@@ -17,77 +22,181 @@
             justify-content: center;
             margin: 0;
             overflow: hidden;
+            transition: background 0.5s;
+        }
+
+        /* Home Button (Logo 1) */
+        .home-btn {
+            position: absolute;
+            top: 30px;
+            left: 30px;
+            z-index: 100;
+            transition: transform 0.3s ease;
+        }
+
+        .home-btn img {
+            height: 50px;
+            width: auto;
+            opacity: 0.6;
+            filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.2));
+        }
+
+        .home-btn:hover img {
+            opacity: 1;
+            transform: scale(1.1);
         }
 
         .watch-face {
             position: relative;
             text-align: center;
+            z-index: 2;
         }
 
         #time {
-            font-size: 6rem;
+            font-size: 8rem;
             font-weight: 100;
             letter-spacing: -2px;
             margin: 0;
-            z-index: 2;
-            position: relative;
+            line-height: 1;
         }
 
         #date {
-            font-size: 1rem;
-            letter-spacing: 5px;
+            font-size: 1.2rem;
+            letter-spacing: 6px;
             text-transform: uppercase;
-            color: #666;
-            margin-top: 10px;
+            color: #555;
+            margin-top: 15px;
         }
 
+        /* Controls */
+        .controls {
+            position: absolute;
+            bottom: 40px;
+            display: flex;
+            gap: 20px;
+        }
+
+        .btn-util {
+            background: transparent;
+            border: 1px solid #333;
+            color: #444;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.7rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            transition: all 0.3s;
+        }
+
+        .btn-util:hover {
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+
+        .active-status {
+            color: var(--gold) !important;
+            border-color: var(--gold) !important;
+        }
+
+        /* Background Gear Decoration */
         .bg-gear {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            opacity: 0.05;
+            opacity: 0.03;
             z-index: 1;
             animation: rotate 60s linear infinite;
         }
 
         @keyframes rotate {
-            from { transform: translate(-50%, -50%) rotate(0deg); }
-            to { transform: translate(-50%, -50%) rotate(360deg); }
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
         }
 
-        .home-link {
-            position: absolute;
-            bottom: 40px;
-            text-decoration: none;
-            color: #333;
-            font-size: 0.7rem;
-            letter-spacing: 2px;
+        @media (max-width: 600px) {
+            #time { font-size: 4rem; }
+            #date { font-size: 0.8rem; letter-spacing: 3px; }
         }
     </style>
 </head>
 <body>
 
-    <svg class="bg-gear" width="500" height="500" viewBox="0 0 100 100">
-        <path d="M50 10 L55 25 L45 25 Z" fill="currentColor"/>
-        <circle cx="50" cy="50" r="35" fill="none" stroke="currentColor" stroke-width="0.5" stroke-dasharray="2,2"/>
+    <a href="/" class="home-btn">
+        <img src="/logo1.png" alt="CalcClock Home">
+    </a>
+
+    <svg class="bg-gear" width="600" height="600" viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="0.1" stroke-dasharray="1,2"/>
+        <path d="M50 5 L52 15 L48 15 Z" fill="currentColor"/>
     </svg>
 
     <div class="watch-face">
         <h1 id="time">00:00:00</h1>
-        <div id="date">Loading...</div>
+        <div id="date">CALCCLOCK CHRONOMETER</div>
     </div>
 
-    <a href="/" class="home-link">RETURN TO HUB</a>
+    <div class="controls">
+        <button class="btn-util" id="wakeBtn">Stay Awake: OFF</button>
+        <button class="btn-util" id="fsBtn">Fullscreen</button>
+    </div>
 
     <script>
+        // 1. Time Logic
         function update() {
             const now = new Date();
             document.getElementById('time').innerText = now.toLocaleTimeString('en-GB', { hour12: false });
-            document.getElementById('date').innerText = now.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+            const options = { weekday: 'long', day: 'numeric', month: 'long' };
+            document.getElementById('date').innerText = now.toLocaleDateString('en-GB', options);
         }
         setInterval(update, 1000);
         update();
+
+        // 2. Fullscreen Logic
+        const fsBtn = document.getElementById('fsBtn');
+        fsBtn.addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+                fsBtn.innerText = "Exit Fullscreen";
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                    fsBtn.innerText = "Fullscreen";
+                }
+            }
+        });
+
+        // 3. Screen Wake Lock Logic (Prevents Dimming)
+        let wakeLock = null;
+        const wakeBtn = document.getElementById('wakeBtn');
+
+        async function toggleWakeLock() {
+            if (wakeLock === null) {
+                try {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                    wakeBtn.innerText = "Stay Awake: ON";
+                    wakeBtn.classList.add('active-status');
+                    
+                    wakeLock.addEventListener('release', () => {
+                        wakeLock = null;
+                        wakeBtn.innerText = "Stay Awake: OFF";
+                        wakeBtn.classList.remove('active-status');
+                    });
+                } catch (err) {
+                    console.error(`${err.name}, ${err.message}`);
+                }
+            } else {
+                wakeLock.release();
+                wakeLock = null;
+            }
+        }
+
+        wakeBtn.addEventListener('click', toggleWakeLock);
+
+        // Re-request wake lock if tab becomes visible again
+        document.addEventListener('visibilitychange', async () => {
+            if (wakeLock !== null && document.visibilityState === 'visible') {
+                wakeLock = await navigator.wakeLock.request('screen');
+            }
+        });
     </script>
 </body>
 </html>
