@@ -3,92 +3,159 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WHTC | IT Solutions & Utility Hub</title>
+    <title>CalcClock | Precision Digital Tools</title>
     <style>
         :root {
-            --bg-color: #0a0a0a;
-            --text-color: #ffffff;
-            --accent-color: #00ff95; /* Professional Tech Green */
+            --brand-gold: #d4af37;
+            --brand-silver: #e0e0e0;
+            --bg-dark: #080808;
+            --transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
         }
 
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
+        body, html {
             margin: 0;
+            padding: 0;
+            height: 100%;
+            background: var(--bg-dark);
+            font-family: 'Helvetica Neue', Arial, sans-serif;
             overflow: hidden;
+            color: white;
+        }
+
+        /* The Brand Header */
+        .header {
+            position: absolute;
+            top: 40px;
+            width: 100%;
+            text-align: center;
+            z-index: 100;
+            pointer-events: none;
+        }
+
+        .brand-name {
+            font-size: 1.2rem;
+            letter-spacing: 15px;
+            text-transform: uppercase;
+            font-weight: 300;
+            color: rgba(255,255,255,0.8);
         }
 
         .container {
-            text-align: center;
-            border: 1px solid #333;
-            padding: 3rem;
-            border-radius: 8px;
-            background: linear-gradient(145deg, #111, #080808);
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
         }
 
-        h1 {
+        /* Split Sections */
+        .section {
+            flex: 1;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-decoration: none;
+            overflow: hidden;
+            transition: var(--transition);
+            border-bottom: 1px solid #1a1a1a;
+        }
+
+        .section:hover {
+            flex: 1.4;
+            background: rgba(255,255,255,0.03);
+        }
+
+        .label {
+            position: relative;
+            z-index: 10;
             font-size: 3rem;
+            font-weight: 200;
+            letter-spacing: 18px;
+            text-transform: uppercase;
+            transition: var(--transition);
+        }
+
+        .section:hover .label {
+            letter-spacing: 25px;
+            color: white;
+        }
+
+        /* Mechanical Gear Visuals */
+        .gear-system {
+            position: absolute;
+            opacity: 0.15;
+            transition: var(--transition);
+        }
+
+        .section:hover .gear-system {
+            opacity: 0.6;
+            transform: scale(1.1);
+        }
+
+        /* Animations */
+        @keyframes rotate-main {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .spin {
+            animation: rotate-main 20s linear infinite;
+        }
+
+        .section:hover .spin {
+            animation-duration: 5s; /* Acceleration */
+        }
+
+        .details {
+            position: absolute;
+            bottom: 30px;
+            font-size: 0.65rem;
             letter-spacing: 5px;
-            margin-bottom: 0.5rem;
+            color: #555;
             text-transform: uppercase;
         }
 
-        .brand-accent {
-            color: var(--accent-color);
-        }
-
-        p {
-            font-size: 1.2rem;
-            color: #888;
-            margin-bottom: 2rem;
-        }
-
-        .status-bar {
-            background: #222;
-            padding: 10px 20px;
-            border-radius: 20px;
-            display: inline-block;
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 0.9rem;
-        }
-
-        .cursor {
-            animation: blink 1s infinite;
-        }
-
-        @keyframes blink {
-            0% { opacity: 0; }
-            50% { opacity: 1; }
-            100% { opacity: 0; }
-        }
-
-        .footer {
-            position: absolute;
-            bottom: 20px;
-            font-size: 0.8rem;
-            color: #444;
-        }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h1>WHTC<span class="brand-accent">.</span></h1>
-        <p>Advanced IT Solutions & Digital Utility Hub</p>
-        
-        <div class="status-bar">
-            > Initializing tools... <span class="brand-accent">Coming Soon</span><span class="cursor">_</span>
-        </div>
+    <div class="header">
+        <div class="brand-name">CALCCLOCK</div>
     </div>
 
-    <div class="footer">
-        &copy; 2026 WebHouse TechnoCare UK. All rights reserved.
+    <div class="container">
+        
+        <a href="/clock/" class="section" style="border-bottom: 1px solid var(--brand-gold);">
+            <div class="gear-system">
+                <svg width="500" height="500" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="48" fill="none" stroke="var(--brand-gold)" stroke-width="0.2" stroke-dasharray="1,3"/>
+                    <g class="spin" style="transform-origin: center;">
+                        <circle cx="50" cy="50" r="15" fill="none" stroke="var(--brand-gold)" stroke-width="1"/>
+                        <rect x="49" y="10" width="2" height="80" fill="var(--brand-gold)" opacity="0.5"/>
+                        <rect x="10" y="49" width="80" height="2" fill="var(--brand-gold)" opacity="0.5"/>
+                        <circle cx="50" cy="15" r="3" fill="var(--brand-gold)"/>
+                        <circle cx="50" cy="85" r="3" fill="var(--brand-gold)"/>
+                    </g>
+                </svg>
+            </div>
+            <div class="label" style="color: var(--brand-gold);">Timepiece</div>
+            <div class="details">Chronometric Engine v1.0</div>
+        </a>
+
+        <a href="/calc/" class="section">
+            <div class="gear-system">
+                <svg width="500" height="500" viewBox="0 0 100 100">
+                    <g class="spin" style="transform-origin: 40% 50%; animation-direction: reverse; animation-duration: 15s;">
+                        <circle cx="40" cy="50" r="20" fill="none" stroke="var(--brand-silver)" stroke-width="2" stroke-dasharray="5,2"/>
+                    </g>
+                    <g class="spin" style="transform-origin: 70% 45%; animation-duration: 25s;">
+                        <circle cx="70" cy="45" r="12" fill="none" stroke="#444" stroke-width="3" stroke-dasharray="2,2"/>
+                    </g>
+                </svg>
+            </div>
+            <div class="label" style="color: var(--brand-silver);">Computation</div>
+            <div class="details">Arithmos Logic Unit</div>
+        </a>
+
     </div>
 
 </body>
