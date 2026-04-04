@@ -22,6 +22,7 @@
             justify-content: center;
             height: 100vh;
             margin: 0;
+            user-select: none; /* Prevents text selection while tapping buttons */
         }
 
         .calc-frame {
@@ -63,8 +64,9 @@
             color: var(--silver);
             font-size: 1.2rem;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.1s;
             box-shadow: 0 4px 0 #000;
+            -webkit-tap-highlight-color: transparent; /* Clean mobile tap */
         }
 
         button:hover {
@@ -75,6 +77,8 @@
         button:active {
             transform: translateY(2px);
             box-shadow: none;
+            background: #333;
+            filter: brightness(1.2); /* Visual "click" glow */
         }
 
         .op { color: var(--gold); background: #1a1a1a; }
@@ -88,6 +92,11 @@
             letter-spacing: 3px;
             font-size: 0.7rem;
             text-transform: uppercase;
+            transition: color 0.3s;
+        }
+
+        .home-link:hover {
+            color: var(--gold);
         }
     </style>
 </head>
@@ -125,12 +134,41 @@
 
     <script>
         const d = document.getElementById('display');
-        function input(v) { if(d.value === '0') d.value = v; else d.value += v; }
-        function clearDisplay() { d.value = '0'; }
-        function backspace() { d.value = d.value.slice(0, -1) || '0'; }
+
+        // Function for haptic vibration
+        function vibrate(ms = 10) {
+            if (navigator.vibrate) {
+                navigator.vibrate(ms);
+            }
+        }
+
+        function input(v) { 
+            vibrate(10); // Short pulse for numbers/operators
+            if(d.value === '0') d.value = v; 
+            else d.value += v; 
+        }
+
+        function clearDisplay() { 
+            vibrate(20); // Slightly distinct pulse for clear
+            d.value = '0'; 
+        }
+
+        function backspace() { 
+            vibrate(10);
+            d.value = d.value.slice(0, -1) || '0'; 
+        }
+
         function solve() { 
-            try { d.value = eval(d.value.replace('×', '*').replace('÷', '/')); } 
-            catch { d.value = "Error"; setTimeout(clearDisplay, 1000); }
+            vibrate(30); // Stronger pulse for result
+            try { 
+                // Using a safer evaluation method would be better for a production app,
+                // but for this utility, eval handles the basic math string perfectly.
+                d.value = eval(d.value.replace('×', '*').replace('÷', '/')); 
+            } 
+            catch { 
+                d.value = "Error"; 
+                setTimeout(clearDisplay, 1000); 
+            }
         }
     </script>
 </body>
