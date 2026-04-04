@@ -74,29 +74,34 @@
             bottom: 40px;
             display: flex;
             gap: 20px;
+            z-index: 10;
         }
 
         .btn-util {
-            background: transparent;
+            background: rgba(255,255,255,0.05);
             border: 1px solid #333;
-            color: #444;
-            padding: 10px 20px;
-            border-radius: 5px;
+            color: #666;
+            padding: 12px 24px;
+            border-radius: 8px;
             cursor: pointer;
             font-size: 0.7rem;
             letter-spacing: 2px;
             text-transform: uppercase;
             transition: all 0.3s;
+            outline: none;
         }
 
         .btn-util:hover {
             border-color: var(--gold);
             color: var(--gold);
+            background: rgba(212, 175, 55, 0.05);
         }
 
         .active-status {
             color: var(--gold) !important;
             border-color: var(--gold) !important;
+            background: rgba(212, 175, 55, 0.1) !important;
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.2);
         }
 
         /* Background Gear Decoration */
@@ -115,6 +120,7 @@
         @media (max-width: 600px) {
             #time { font-size: 4rem; }
             #date { font-size: 0.8rem; letter-spacing: 3px; }
+            .controls { gap: 10px; }
         }
     </style>
 </head>
@@ -143,9 +149,13 @@
         // 1. Time Logic
         function update() {
             const now = new Date();
-            document.getElementById('time').innerText = now.toLocaleTimeString('en-GB', { hour12: false });
-            const options = { weekday: 'long', day: 'numeric', month: 'long' };
-            document.getElementById('date').innerText = now.toLocaleDateString('en-GB', options);
+            const timeEl = document.getElementById('time');
+            const dateEl = document.getElementById('date');
+            if(timeEl) timeEl.innerText = now.toLocaleTimeString('en-GB', { hour12: false });
+            if(dateEl) {
+                const options = { weekday: 'long', day: 'numeric', month: 'long' };
+                dateEl.innerText = now.toLocaleDateString('en-GB', options);
+            }
         }
         setInterval(update, 1000);
         update();
@@ -154,47 +164,63 @@
         const fsBtn = document.getElementById('fsBtn');
         fsBtn.addEventListener('click', () => {
             if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen();
-                fsBtn.innerText = "Exit Fullscreen";
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.log("Error attempting to enable full-screen mode:", err.message);
+                });
             } else {
                 if (document.exitFullscreen) {
                     document.exitFullscreen();
-                    fsBtn.innerText = "Fullscreen";
                 }
             }
         });
 
-        // 3. Screen Wake Lock Logic (Prevents Dimming)
+        // Update button text based on fullscreen state
+        document.addEventListener('fullscreenchange', () => {
+            if (document.fullscreenElement) {
+                fsBtn.innerText = "Exit Fullscreen";
+                fsBtn.classList.add('active-status');
+            } else {
+                fsBtn.innerText = "Fullscreen";
+                fsBtn.classList.remove('active-status');
+            }
+        });
+
+        // 3. Screen Wake Lock Logic
         let wakeLock = null;
         const wakeBtn = document.getElementById('wakeBtn');
 
-        async function toggleWakeLock() {
-            if (wakeLock === null) {
-                try {
+        async function requestWakeLock() {
+            try {
+                if ('wakeLock' in navigator) {
                     wakeLock = await navigator.wakeLock.request('screen');
                     wakeBtn.innerText = "Stay Awake: ON";
                     wakeBtn.classList.add('active-status');
                     
                     wakeLock.addEventListener('release', () => {
-                        wakeLock = null;
-                        wakeBtn.innerText = "Stay Awake: OFF";
-                        wakeBtn.classList.remove('active-status');
+                        console.log('Wake Lock was released');
                     });
-                } catch (err) {
-                    console.error(`${err.name}, ${err.message}`);
                 }
-            } else {
-                wakeLock.release();
-                wakeLock = null;
+            } catch (err) {
+                console.error(`${err.name}, ${err.message}`);
+                wakeBtn.innerText = "Stay Awake: Error";
             }
         }
 
-        wakeBtn.addEventListener('click', toggleWakeLock);
+        wakeBtn.addEventListener('click', async () => {
+            if (wakeLock === null) {
+                await requestWakeLock();
+            } else {
+                wakeLock.release();
+                wakeLock = null;
+                wakeBtn.innerText = "Stay Awake: OFF";
+                wakeBtn.classList.remove('active-status');
+            }
+        });
 
-        // Re-request wake lock if tab becomes visible again
+        // Re-request wake lock if tab becomes visible again (mobile optimization)
         document.addEventListener('visibilitychange', async () => {
             if (wakeLock !== null && document.visibilityState === 'visible') {
-                wakeLock = await navigator.wakeLock.request('screen');
+                await requestWakeLock();
             }
         });
     </script>
