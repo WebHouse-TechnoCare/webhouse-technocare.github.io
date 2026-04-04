@@ -1,1 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CalcClock | Calculator</title>
+    <style>
+        :root {
+            --silver: #e0e0e0;
+            --gold: #d4af37;
+            --bg: #0a0a0a;
+            --panel: #151515;
+        }
 
+        body {
+            background: var(--bg);
+            color: var(--silver);
+            font-family: 'Helvetica Neue', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .calc-frame {
+            background: var(--panel);
+            padding: 25px;
+            border-radius: 30px;
+            border: 1px solid #222;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+            width: 320px;
+        }
+
+        #display {
+            width: 100%;
+            height: 70px;
+            background: #000;
+            border: none;
+            color: var(--gold);
+            font-size: 2.5rem;
+            text-align: right;
+            padding: 15px;
+            box-sizing: border-box;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            font-family: 'Courier New', monospace;
+            box-shadow: inset 0 0 15px rgba(0,0,0,1);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        button {
+            height: 60px;
+            border-radius: 12px;
+            border: none;
+            background: #222;
+            color: var(--silver);
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 0 #000;
+        }
+
+        button:hover {
+            background: #2a2a2a;
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(2px);
+            box-shadow: none;
+        }
+
+        .op { color: var(--gold); background: #1a1a1a; }
+        .clear { color: #ff4444; }
+        .equal { background: var(--gold); color: black; grid-column: span 2; }
+
+        .home-link {
+            margin-top: 40px;
+            text-decoration: none;
+            color: #444;
+            letter-spacing: 3px;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="calc-frame">
+        <input type="text" id="display" readonly value="0">
+        <div class="grid">
+            <button class="clear" onclick="clearDisplay()">C</button>
+            <button class="op" onclick="input('/')">÷</button>
+            <button class="op" onclick="input('*')">×</button>
+            <button onclick="backspace()">⌫</button>
+            
+            <button onclick="input('7')">7</button>
+            <button onclick="input('8')">8</button>
+            <button onclick="input('9')">9</button>
+            <button class="op" onclick="input('-')">-</button>
+            
+            <button onclick="input('4')">4</button>
+            <button onclick="input('5')">5</button>
+            <button onclick="input('6')">6</button>
+            <button class="op" onclick="input('+')">+</button>
+            
+            <button onclick="input('1')">1</button>
+            <button onclick="input('2')">2</button>
+            <button onclick="input('3')">3</button>
+            <button class="op" onclick="input('.')">.</button>
+            
+            <button onclick="input('0')">0</button>
+            <button class="equal" onclick="solve()">=</button>
+        </div>
+    </div>
+
+    <a href="/" class="home-link">Back to CalcClock Hub</a>
+
+    <script>
+        const d = document.getElementById('display');
+        function input(v) { if(d.value === '0') d.value = v; else d.value += v; }
+        function clearDisplay() { d.value = '0'; }
+        function backspace() { d.value = d.value.slice(0, -1) || '0'; }
+        function solve() { 
+            try { d.value = eval(d.value.replace('×', '*').replace('÷', '/')); } 
+            catch { d.value = "Error"; setTimeout(clearDisplay, 1000); }
+        }
+    </script>
+</body>
+</html>
