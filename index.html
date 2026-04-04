@@ -22,22 +22,21 @@
             color: white;
         }
 
-        /* The Brand Header */
+        /* Updated Brand Header for Logo 2 */
         .header {
             position: absolute;
-            top: 40px;
+            top: 30px;
             width: 100%;
             text-align: center;
             z-index: 100;
             pointer-events: none;
         }
 
-        .brand-name {
-            font-size: 1.2rem;
-            letter-spacing: 15px;
-            text-transform: uppercase;
-            font-weight: 300;
-            color: rgba(255,255,255,0.8);
+        .brand-logo {
+            height: 80px; /* Adjust this height to fit your logo design */
+            width: auto;
+            filter: drop-shadow(0 0 10px rgba(0,0,0,0.5));
+            opacity: 0.95;
         }
 
         .container {
@@ -115,32 +114,31 @@
         }
 
         /* Responsive Fix for Mobile */
-@media (max-width: 600px) {
-    .label {
-        font-size: 1.8rem; /* Shrunk from 3rem */
-        letter-spacing: 8px; /* Shrunk from 18px */
-    }
-    
-    .section:hover .label {
-        letter-spacing: 12px; /* Prevent over-expansion on touch */
-    }
+        @media (max-width: 600px) {
+            .brand-logo {
+                height: 60px; /* Smaller logo for mobile */
+            }
 
-    .brand-name {
-        font-size: 0.9rem;
-        letter-spacing: 8px;
-    }
+            .label {
+                font-size: 1.8rem;
+                letter-spacing: 8px;
+            }
+            
+            .section:hover .label {
+                letter-spacing: 12px;
+            }
 
-    .gear-system svg {
-        width: 300px; /* Shrink gears so they don't overlap text too much */
-        height: 300px;
-    }
-}
+            .gear-system svg {
+                width: 300px;
+                height: 300px;
+            }
+        }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <div class="brand-name">logo.png</div>
+        <img src="/logo2.png" alt="CalcClock Logo" class="brand-logo">
     </div>
 
     <div class="container">
