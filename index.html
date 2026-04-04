@@ -114,6 +114,27 @@
             text-transform: uppercase;
         }
 
+        /* Responsive Fix for Mobile */
+@media (max-width: 600px) {
+    .label {
+        font-size: 1.8rem; /* Shrunk from 3rem */
+        letter-spacing: 8px; /* Shrunk from 18px */
+    }
+    
+    .section:hover .label {
+        letter-spacing: 12px; /* Prevent over-expansion on touch */
+    }
+
+    .brand-name {
+        font-size: 0.9rem;
+        letter-spacing: 8px;
+    }
+
+    .gear-system svg {
+        width: 300px; /* Shrink gears so they don't overlap text too much */
+        height: 300px;
+    }
+}
     </style>
 </head>
 <body>
