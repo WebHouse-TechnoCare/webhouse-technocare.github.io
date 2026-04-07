@@ -53,7 +53,7 @@
             position: relative;
             text-align: center;
             z-index: 2;
-            pointer-events: none; /* Let mouse move through to canvas */
+            pointer-events: none; 
         }
 
         #time {
@@ -71,6 +71,42 @@
             text-transform: uppercase;
             color: #555;
             margin-top: 15px;
+        }
+
+        /* --- ADDED: World Clock Styles --- */
+        .sub-dials {
+            display: flex;
+            gap: 40px;
+            margin-top: 30px;
+            justify-content: center;
+            transition: opacity 0.5s ease;
+        }
+
+        .dial {
+            text-align: center;
+            min-width: 100px;
+        }
+
+        .dial-time {
+            font-size: 1.4rem;
+            font-weight: 300;
+            letter-spacing: 1px;
+            color: var(--accent);
+            opacity: 0.8;
+        }
+
+        .dial-label {
+            font-size: 0.6rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: #555;
+            margin-top: 5px;
+        }
+
+        /* Hide dials when Pomodoro is active */
+        .pomo-active .sub-dials {
+            opacity: 0;
+            pointer-events: none;
         }
 
         .controls {
@@ -108,6 +144,8 @@
 
         @media (max-width: 600px) {
             #time { font-size: 4rem; }
+            .sub-dials { gap: 15px; margin-top: 20px; }
+            .dial-time { font-size: 1rem; }
         }
     </style>
 </head>
@@ -122,6 +160,21 @@
     <div class="watch-face">
         <h1 id="time">00:00:00</h1>
         <div id="date">CALCCLOCK CHRONOMETER</div>
+
+        <div class="sub-dials" id="subDials">
+            <div class="dial">
+                <div class="dial-time" id="nyc">00:00</div>
+                <div class="dial-label">New York</div>
+            </div>
+            <div class="dial">
+                <div class="dial-time" id="tokyo">00:00</div>
+                <div class="dial-label">Tokyo</div>
+            </div>
+            <div class="dial">
+                <div class="dial-time" id="london">00:00</div>
+                <div class="dial-label">London</div>
+            </div>
+        </div>
     </div>
 
     <div class="controls">
@@ -190,11 +243,33 @@
             const now = new Date();
 
             if (!pomoActive) {
+                document.body.classList.remove('pomo-active'); // Show sub-dials
                 timeEl.innerText = now.toLocaleTimeString('en-GB', { hour12: false });
+                
+                // --- ADDED: World Clock Update Logic ---
+                const zones = {
+                    nyc: 'America/New_York',
+                    tokyo: 'Asia/Tokyo',
+                    london: 'Europe/London'
+                };
+
+                for (const [id, zone] of Object.entries(zones)) {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        el.innerText = now.toLocaleTimeString('en-GB', {
+                            hour12: false,
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            timeZone: zone
+                        });
+                    }
+                }
+
                 const options = { weekday: 'long', day: 'numeric', month: 'long' };
                 dateEl.innerText = now.toLocaleDateString('en-GB', options);
                 document.documentElement.style.setProperty('--accent', 'var(--gold)');
             } else {
+                document.body.classList.add('pomo-active'); // Hide sub-dials
                 let mins = Math.floor(pomoTime / 60);
                 let secs = pomoTime % 60;
                 timeEl.innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
@@ -229,7 +304,7 @@
         setInterval(() => { if(!pomoActive) updateDisplay(); }, 1000);
         updateDisplay();
 
-        // --- 3. Fullscreen & Wake Lock (Existing) ---
+        // --- 3. Fullscreen & Wake Lock ---
         const fsBtn = document.getElementById('fsBtn');
         fsBtn.addEventListener('click', () => {
             if (!document.fullscreenElement) document.documentElement.requestFullscreen();
