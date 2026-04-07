@@ -3,17 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CalcClock | Chronometer</title>
+    <title>CalcClock | Chronometer Pro</title>
     <link rel="icon" type="image/png" href="/logo1.png">
     <style>
         :root {
             --gold: #d4af37;
+            --ruby: #9b111e;
             --bg: #050505;
+            --accent: var(--gold); /* Dynamic accent color */
         }
 
         body {
             background: var(--bg);
-            color: var(--gold);
+            color: var(--accent);
             font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
             height: 100vh;
             display: flex;
@@ -22,10 +24,17 @@
             justify-content: center;
             margin: 0;
             overflow: hidden;
-            transition: background 0.5s;
+            transition: color 1s ease, background 0.5s;
         }
 
-        /* Home Button (Logo 1) */
+        /* Ambient Canvas Background */
+        #ambientCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 0;
+        }
+
         .home-btn {
             position: absolute;
             top: 30px;
@@ -38,18 +47,13 @@
             height: 50px;
             width: auto;
             opacity: 0.6;
-            filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.2));
-        }
-
-        .home-btn:hover img {
-            opacity: 1;
-            transform: scale(1.1);
         }
 
         .watch-face {
             position: relative;
             text-align: center;
             z-index: 2;
+            pointer-events: none; /* Let mouse move through to canvas */
         }
 
         #time {
@@ -58,6 +62,7 @@
             letter-spacing: -2px;
             margin: 0;
             line-height: 1;
+            text-shadow: 0 0 20px rgba(0,0,0,0.5);
         }
 
         #date {
@@ -68,72 +73,51 @@
             margin-top: 15px;
         }
 
-        /* Controls */
         .controls {
             position: absolute;
             bottom: 40px;
             display: flex;
-            gap: 20px;
+            gap: 15px;
             z-index: 10;
         }
 
         .btn-util {
-            background: rgba(255,255,255,0.05);
+            background: rgba(0,0,0,0.6);
             border: 1px solid #333;
             color: #666;
-            padding: 12px 24px;
-            border-radius: 8px;
+            padding: 10px 20px;
+            border-radius: 4px;
             cursor: pointer;
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             letter-spacing: 2px;
             text-transform: uppercase;
             transition: all 0.3s;
-            outline: none;
+            backdrop-filter: blur(5px);
         }
 
         .btn-util:hover {
-            border-color: var(--gold);
-            color: var(--gold);
-            background: rgba(212, 175, 55, 0.05);
+            border-color: var(--accent);
+            color: var(--accent);
         }
 
         .active-status {
-            color: var(--gold) !important;
-            border-color: var(--gold) !important;
-            background: rgba(212, 175, 55, 0.1) !important;
-            box-shadow: 0 0 15px rgba(212, 175, 55, 0.2);
-        }
-
-        /* Background Gear Decoration */
-        .bg-gear {
-            position: absolute;
-            opacity: 0.03;
-            z-index: 1;
-            animation: rotate 60s linear infinite;
-        }
-
-        @keyframes rotate {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
+            color: var(--accent) !important;
+            border-color: var(--accent) !important;
+            box-shadow: 0 0 10px rgba(212, 175, 55, 0.1);
         }
 
         @media (max-width: 600px) {
             #time { font-size: 4rem; }
-            #date { font-size: 0.8rem; letter-spacing: 3px; }
-            .controls { gap: 10px; }
         }
     </style>
 </head>
 <body>
 
+    <canvas id="ambientCanvas"></canvas>
+
     <a href="/" class="home-btn">
         <img src="/logo1.png" alt="CalcClock Home">
     </a>
-
-    <svg class="bg-gear" width="600" height="600" viewBox="0 0 100 100">
-        <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="0.1" stroke-dasharray="1,2"/>
-        <path d="M50 5 L52 15 L48 15 Z" fill="currentColor"/>
-    </svg>
 
     <div class="watch-face">
         <h1 id="time">00:00:00</h1>
@@ -141,86 +125,136 @@
     </div>
 
     <div class="controls">
+        <button class="btn-util" id="pomoBtn">Pomodoro: OFF</button>
         <button class="btn-util" id="wakeBtn">Stay Awake: OFF</button>
         <button class="btn-util" id="fsBtn">Fullscreen</button>
     </div>
 
     <script>
-        // 1. Time Logic
-        function update() {
-            const now = new Date();
-            const timeEl = document.getElementById('time');
-            const dateEl = document.getElementById('date');
-            if(timeEl) timeEl.innerText = now.toLocaleTimeString('en-GB', { hour12: false });
-            if(dateEl) {
-                const options = { weekday: 'long', day: 'numeric', month: 'long' };
-                dateEl.innerText = now.toLocaleDateString('en-GB', options);
+        // --- 1. Ambient Starfield Logic ---
+        const canvas = document.getElementById('ambientCanvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        let mouse = { x: -100, y: -100 };
+
+        function initCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            particles = [];
+            for(let i = 0; i < 100; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    size: Math.random() * 1.5,
+                    speedX: (Math.random() - 0.5) * 0.2,
+                    speedY: (Math.random() - 0.5) * 0.2
+                });
             }
         }
-        setInterval(update, 1000);
-        update();
 
-        // 2. Fullscreen Logic
+        function drawAmbient() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--accent');
+            ctx.globalAlpha = 0.2;
+            
+            particles.forEach(p => {
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+
+                p.x += p.speedX + (mouse.x - canvas.width/2) * 0.001;
+                p.y += p.speedY + (mouse.y - canvas.height/2) * 0.001;
+
+                if(p.x < 0) p.x = canvas.width;
+                if(p.x > canvas.width) p.x = 0;
+                if(p.y < 0) p.y = canvas.height;
+                if(p.y > canvas.height) p.y = 0;
+            });
+            requestAnimationFrame(drawAmbient);
+        }
+
+        window.addEventListener('mousemove', (e) => { mouse.x = e.clientX; mouse.y = e.clientY; });
+        window.addEventListener('resize', initCanvas);
+        initCanvas();
+        drawAmbient();
+
+        // --- 2. Pomodoro Logic ---
+        let pomoActive = false;
+        let pomoTime = 25 * 60; 
+        let pomoInterval = null;
+        const pomoBtn = document.getElementById('pomoBtn');
+
+        function updateDisplay() {
+            const timeEl = document.getElementById('time');
+            const dateEl = document.getElementById('date');
+            const now = new Date();
+
+            if (!pomoActive) {
+                timeEl.innerText = now.toLocaleTimeString('en-GB', { hour12: false });
+                const options = { weekday: 'long', day: 'numeric', month: 'long' };
+                dateEl.innerText = now.toLocaleDateString('en-GB', options);
+                document.documentElement.style.setProperty('--accent', 'var(--gold)');
+            } else {
+                let mins = Math.floor(pomoTime / 60);
+                let secs = pomoTime % 60;
+                timeEl.innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+                dateEl.innerText = "FOCUS SESSION ACTIVE";
+                document.documentElement.style.setProperty('--accent', 'var(--ruby)');
+            }
+        }
+
+        pomoBtn.addEventListener('click', () => {
+            pomoActive = !pomoActive;
+            if (pomoActive) {
+                pomoTime = 25 * 60;
+                pomoBtn.innerText = "Focus: ON (25m)";
+                pomoBtn.classList.add('active-status');
+                pomoInterval = setInterval(() => {
+                    pomoTime--;
+                    if(pomoTime <= 0) {
+                        pomoActive = false;
+                        clearInterval(pomoInterval);
+                        alert("Focus session complete! Take a break.");
+                    }
+                    updateDisplay();
+                }, 1000);
+            } else {
+                clearInterval(pomoInterval);
+                pomoBtn.innerText = "Pomodoro: OFF";
+                pomoBtn.classList.remove('active-status');
+            }
+            updateDisplay();
+        });
+
+        setInterval(() => { if(!pomoActive) updateDisplay(); }, 1000);
+        updateDisplay();
+
+        // --- 3. Fullscreen & Wake Lock (Existing) ---
         const fsBtn = document.getElementById('fsBtn');
         fsBtn.addEventListener('click', () => {
-            if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen().catch(err => {
-                    console.log("Error attempting to enable full-screen mode:", err.message);
-                });
-            } else {
-                if (document.exitFullscreen) {
-                    document.exitFullscreen();
-                }
-            }
+            if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+            else document.exitFullscreen();
         });
 
-        // Update button text based on fullscreen state
-        document.addEventListener('fullscreenchange', () => {
-            if (document.fullscreenElement) {
-                fsBtn.innerText = "Exit Fullscreen";
-                fsBtn.classList.add('active-status');
-            } else {
-                fsBtn.innerText = "Fullscreen";
-                fsBtn.classList.remove('active-status');
-            }
-        });
-
-        // 3. Screen Wake Lock Logic
         let wakeLock = null;
         const wakeBtn = document.getElementById('wakeBtn');
-
         async function requestWakeLock() {
             try {
                 if ('wakeLock' in navigator) {
                     wakeLock = await navigator.wakeLock.request('screen');
                     wakeBtn.innerText = "Stay Awake: ON";
                     wakeBtn.classList.add('active-status');
-                    
-                    wakeLock.addEventListener('release', () => {
-                        console.log('Wake Lock was released');
-                    });
                 }
-            } catch (err) {
-                console.error(`${err.name}, ${err.message}`);
-                wakeBtn.innerText = "Stay Awake: Error";
-            }
+            } catch (err) { wakeBtn.innerText = "Stay Awake: Error"; }
         }
 
         wakeBtn.addEventListener('click', async () => {
-            if (wakeLock === null) {
-                await requestWakeLock();
-            } else {
+            if (wakeLock === null) await requestWakeLock();
+            else {
                 wakeLock.release();
                 wakeLock = null;
                 wakeBtn.innerText = "Stay Awake: OFF";
                 wakeBtn.classList.remove('active-status');
-            }
-        });
-
-        // Re-request wake lock if tab becomes visible again (mobile optimization)
-        document.addEventListener('visibilitychange', async () => {
-            if (wakeLock !== null && document.visibilityState === 'visible') {
-                await requestWakeLock();
             }
         });
     </script>
