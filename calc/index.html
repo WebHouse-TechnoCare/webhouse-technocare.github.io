@@ -3,14 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CalcClock | Computation</title>
+    <title>CalcClock | Advanced Computation</title>
     <link rel="icon" type="image/png" href="/logo1.png">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
     <style>
         :root {
             --silver: #e0e0e0;
             --gold: #d4af37;
             --bg: #0a0a0a;
             --panel: #151515;
+            --accent: #4CAF50;
         }
 
         body {
@@ -23,41 +25,49 @@
             justify-content: center;
             height: 100vh;
             margin: 0;
-            user-select: none;
+            overflow: hidden;
         }
 
-        /* Home Button (Logo 1) */
-        .home-btn {
-            position: absolute;
-            top: 30px;
-            left: 30px;
+        .home-btn { position: absolute; top: 30px; left: 30px; z-index: 100; }
+        .home-btn img { height: 40px; opacity: 0.5; transition: 0.3s; }
+        .home-btn:hover img { opacity: 1; }
+
+        /* Mode Switcher */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
         }
-
-        .home-btn img {
-            height: 45px;
-            width: auto;
-            opacity: 0.5;
-            transition: 0.3s;
+        .tab-btn {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            color: #666;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.7rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
         }
+        .tab-btn.active { border-color: var(--gold); color: var(--gold); }
 
-        .home-btn:hover img { opacity: 1; transform: scale(1.1); }
-
-        .calc-frame {
+        .calc-container {
             background: var(--panel);
             padding: 25px;
             border-radius: 30px;
             border: 1px solid #222;
             box-shadow: 0 30px 60px rgba(0,0,0,0.8);
-            width: 320px;
+            width: 350px;
+            position: relative;
         }
 
         #display {
             width: 100%;
-            height: 70px;
+            height: 80px;
             background: #000;
             border: none;
             color: var(--gold);
-            font-size: 2.2rem;
+            font-size: 1.5rem;
             text-align: right;
             padding: 15px;
             box-sizing: border-box;
@@ -67,109 +77,187 @@
             box-shadow: inset 0 0 15px rgba(0,0,0,1);
         }
 
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 12px;
-        }
+        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        .scientific-grid { display: none; grid-template-columns: repeat(5, 1fr); }
 
         button {
-            height: 55px;
-            border-radius: 10px;
+            height: 50px;
+            border-radius: 8px;
             border: none;
             background: #222;
             color: var(--silver);
-            font-size: 1.1rem;
+            font-size: 1rem;
             cursor: pointer;
-            transition: all 0.1s;
-            box-shadow: 0 4px 0 #000;
+            box-shadow: 0 3px 0 #000;
         }
-
-        button:active {
-            transform: translateY(2px);
-            box-shadow: none;
-            background: #2a2a2a;
-        }
-
-        .op { color: var(--gold); background: #1a1a1a; }
-        .clear { color: #ff4444; }
-        .equal { background: var(--gold); color: black; grid-column: span 2; font-weight: bold; }
+        button:active { transform: translateY(2px); box-shadow: none; }
+        .op { color: var(--gold); }
+        .equal { background: var(--gold); color: black; grid-column: span 2; }
         
-        /* Financial Row */
-        .fin { 
-            background: #1a2a1a; 
-            color: #4CAF50; 
-            font-size: 0.8rem; 
-            font-weight: bold;
+        /* Sketch Pad */
+        #sketch-zone {
+            display: none;
+            width: 100%;
+            height: 350px;
+            background: #050505;
+            border-radius: 15px;
+            border: 1px dashed #333;
+            cursor: crosshair;
         }
 
+        canvas { width: 100%; height: 100%; touch-action: none; }
+
+        .sketch-tools {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
 
-    <a href="/" class="home-btn">
-        <img src="/logo1.png" alt="Home">
-    </a>
+    <a href="/" class="home-btn"><img src="/logo1.png" alt="Home"></a>
 
-    <div class="calc-frame">
+    <div class="tabs">
+        <button class="tab-btn active" onclick="setMode('std')">Standard</button>
+        <button class="tab-btn" onclick="setMode('sci')">Scientific</button>
+        <button class="tab-btn" onclick="setMode('draw')">Sketch</button>
+    </div>
+
+    <div class="calc-container">
         <input type="text" id="display" readonly value="0">
-        <div class="grid">
-            <button class="fin" onclick="applyVAT(1.2)">+VAT</button>
-            <button class="fin" onclick="applyVAT(0.8333)">-VAT</button>
-            <button class="op" onclick="input('/')">÷</button>
-            <button class="clear" onclick="clearDisplay()">AC</button>
-            
-            <button onclick="input('7')">7</button>
-            <button onclick="input('8')">8</button>
-            <button onclick="input('9')">9</button>
-            <button class="op" onclick="input('*')">×</button>
-            
-            <button onclick="input('4')">4</button>
-            <button onclick="input('5')">5</button>
-            <button onclick="input('6')">6</button>
-            <button class="op" onclick="input('-')">-</button>
-            
-            <button onclick="input('1')">1</button>
-            <button onclick="input('2')">2</button>
-            <button onclick="input('3')">3</button>
-            <button class="op" onclick="input('+')">+</button>
-            
-            <button onclick="input('0')">0</button>
-            <button onclick="input('.')">.</button>
-            <button class="equal" onclick="solve()">=</button>
+        
+        <div id="math-ui">
+            <div id="button-grid" class="grid">
+                </div>
+        </div>
+
+        <div id="sketch-zone">
+            <canvas id="canvas"></canvas>
+            <div class="sketch-tools">
+                <button class="tab-btn" onclick="clearCanvas()">Clear Sketch</button>
+                <span style="font-size: 0.6rem; color: #444;">A-Level Workspace</span>
+            </div>
         </div>
     </div>
 
     <script>
         const d = document.getElementById('display');
+        const grid = document.getElementById('button-grid');
+        let currentMode = 'std';
 
-        function input(v) { 
+        // 1. Mode Switching Logic
+        function setMode(mode) {
+            currentMode = mode;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            const sketch = document.getElementById('sketch-zone');
+            const math = document.getElementById('math-ui');
+            
+            if(mode === 'draw') {
+                sketch.style.display = 'block';
+                math.style.display = 'none';
+                initCanvas();
+            } else {
+                sketch.style.display = 'none';
+                math.style.display = 'block';
+                renderButtons(mode);
+            }
+        }
+
+        // 2. Button Rendering
+        function renderButtons(mode) {
+            grid.innerHTML = '';
+            let btns = [];
+            
+            if(mode === 'std') {
+                grid.style.gridTemplateColumns = 'repeat(4, 1fr)';
+                btns = [
+                    'C', '/', '*', '⌫',
+                    '7', '8', '9', '-',
+                    '4', '5', '6', '+',
+                    '1', '2', '3', '.',
+                    '0', '='
+                ];
+            } else {
+                grid.style.gridTemplateColumns = 'repeat(5, 1fr)';
+                btns = [
+                    'sin', 'cos', 'tan', 'log', 'C',
+                    'sqrt', '(', ')', '^', '/',
+                    '7', '8', '9', '*', '⌫',
+                    '4', '5', '6', '-', 'exp',
+                    '1', '2', '3', '+', 'det',
+                    '0', '.', '=', 'pi', 'e'
+                ];
+            }
+
+            btns.forEach(b => {
+                const btn = document.createElement('button');
+                btn.innerText = b;
+                if(['/', '*', '-', '+', '=', 'sin', 'cos', 'tan', 'log', 'sqrt', '^', 'det'].includes(b)) btn.className = 'op';
+                if(b === 'C') btn.className = 'clear';
+                if(b === '=') { btn.className = 'equal'; btn.onclick = solve; }
+                else if(b === 'C') btn.onclick = clearDisplay;
+                else if(b === '⌫') btn.onclick = backspace;
+                else btn.onclick = () => input(b);
+                grid.appendChild(btn);
+            });
+        }
+
+        // 3. Calculation Logic (Using Math.js)
+        function input(v) {
             if (navigator.vibrate) navigator.vibrate(10);
-            if(d.value === '0') d.value = v; 
-            else d.value += v; 
+            let val = v;
+            if(['sin','cos','tan','log','sqrt'].includes(v)) val = v + '(';
+            if(d.value === '0') d.value = val; else d.value += val;
         }
 
-        function clearDisplay() { 
-            if (navigator.vibrate) navigator.vibrate(20);
-            d.value = '0'; 
-        }
+        function clearDisplay() { d.value = '0'; }
+        function backspace() { d.value = d.value.slice(0, -1) || '0'; }
 
-        function applyVAT(multiplier) {
-            if (navigator.vibrate) navigator.vibrate(30);
+        function solve() {
             try {
-                let current = eval(d.value);
-                d.value = (current * multiplier).toFixed(2);
-            } catch { d.value = "Error"; }
+                // Math.js evaluate handles calculus/complex strings
+                let result = math.evaluate(d.value);
+                d.value = math.format(result, {precision: 10});
+            } catch (e) {
+                d.value = "Format Error";
+                setTimeout(clearDisplay, 1500);
+            }
         }
 
-        function solve() { 
-            if (navigator.vibrate) navigator.vibrate(40);
-            try { 
-                let res = eval(d.value.replace('×', '*').replace('÷', '/')); 
-                d.value = Number.isInteger(res) ? res : res.toFixed(2);
-            } 
-            catch { d.value = "Error"; setTimeout(clearDisplay, 1000); }
+        // 4. Sketch Pad Logic
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        let drawing = false;
+
+        function initCanvas() {
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+            ctx.strokeStyle = '#d4af37';
+            ctx.lineWidth = 2;
+            ctx.lineCap = 'round';
         }
+
+        canvas.addEventListener('mousedown', () => drawing = true);
+        canvas.addEventListener('mouseup', () => { drawing = false; ctx.beginPath(); });
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('touchstart', (e) => { drawing = true; e.preventDefault(); });
+        canvas.addEventListener('touchend', () => { drawing = false; ctx.beginPath(); });
+        canvas.addEventListener('touchmove', (e) => { draw(e.touches[0]); e.preventDefault(); });
+
+        function draw(e) {
+            if (!drawing) return;
+            const rect = canvas.getBoundingClientRect();
+            ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+            ctx.stroke();
+        }
+
+        function clearCanvas() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
+
+        // Initial Boot
+        renderButtons('std');
     </script>
 </body>
 </html>
