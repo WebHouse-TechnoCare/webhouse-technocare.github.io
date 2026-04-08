@@ -3,41 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CalcClock | Advanced AI Computation</title>
+    <title>CalcClock | AI Advanced Suite</title>
     <link rel="icon" type="image/png" href="/logo1.png">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
     <style>
-        :root { --gold: #d4af37; --bg: #0a0a0a; --panel: #151515; --accent: #4CAF50; --silver: #e0e0e0; }
-        body { background: var(--bg); color: #e0e0e0; font-family: 'Helvetica Neue', sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; overflow: hidden; }
+        :root { --gold: #d4af37; --bg: #050505; --panel: #111; --accent: #00ff88; --silver: #e0e0e0; }
+        body { background: var(--bg); color: #e0e0e0; font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; overflow: hidden; }
         
-        .home-btn { position: absolute; top: 30px; left: 30px; z-index: 100; }
-        .home-btn img { height: 40px; opacity: 0.5; transition: 0.3s; }
+        .home-btn { position: absolute; top: 20px; left: 20px; z-index: 100; }
+        .home-btn img { height: 35px; opacity: 0.5; transition: 0.3s; }
         .home-btn:hover img { opacity: 1; }
 
-        .calc-container { background: var(--panel); padding: 25px; border-radius: 30px; border: 1px solid #222; width: 360px; position: relative; box-shadow: 0 30px 60px rgba(0,0,0,0.8); }
-        #display { width: 100%; height: 80px; background: #000; border: none; color: var(--gold); font-size: 1.4rem; text-align: right; padding: 15px; box-sizing: border-box; border-radius: 15px; margin-bottom: 20px; font-family: monospace; box-shadow: inset 0 0 15px rgba(0,0,0,1); }
+        .calc-container { background: var(--panel); padding: 25px; border-radius: 30px; border: 1px solid #222; width: 360px; box-shadow: 0 40px 100px rgba(0,0,0,0.9); position: relative; }
+        #display { width: 100%; height: 85px; background: #000; border: none; color: var(--gold); font-size: 1.6rem; text-align: right; padding: 20px; box-sizing: border-box; border-radius: 15px; margin-bottom: 20px; font-family: 'Courier New', monospace; box-shadow: inset 0 0 20px #000; }
         
-        .tabs { display: flex; gap: 8px; margin-bottom: 15px; flex-wrap: wrap; justify-content: center; }
-        .tab-btn { background: #1a1a1a; border: 1px solid #333; color: #666; padding: 8px 12px; border-radius: 20px; cursor: pointer; font-size: 0.65rem; text-transform: uppercase; transition: 0.3s; }
-        .tab-btn.active { border-color: var(--gold); color: var(--gold); background: rgba(212, 175, 55, 0.1); }
+        .tabs { display: flex; gap: 5px; margin-bottom: 15px; width: 100%; }
+        .tab-btn { background: #1a1a1a; border: 1px solid #333; color: #555; padding: 10px; border-radius: 10px; cursor: pointer; font-size: 0.6rem; text-transform: uppercase; flex: 1; transition: 0.3s; }
+        .tab-btn.active { border-color: var(--gold); color: var(--gold); background: #221d10; }
 
-        #button-grid { display: grid; gap: 10px; }
-        button { height: 50px; border-radius: 8px; border: none; background: #222; color: var(--silver); font-size: 1rem; cursor: pointer; transition: 0.1s; box-shadow: 0 3px 0 #000; }
-        button:active { transform: translateY(2px); box-shadow: none; }
-        .op { color: var(--gold); }
-        .equal { background: var(--gold); color: black; font-weight: bold; }
+        /* Scientific MCQ Modal */
+        #verify-modal { 
+            display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+            background: rgba(10, 10, 10, 0.98); backdrop-filter: blur(15px); 
+            border: 1px solid var(--gold); padding: 25px; border-radius: 20px; z-index: 1000; width: 320px; 
+            text-align: center; box-shadow: 0 0 50px rgba(212, 175, 55, 0.4);
+            background-image: linear-gradient(rgba(212, 175, 55, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(212, 175, 55, 0.05) 1px, transparent 1px);
+            background-size: 20px 20px; /* Scientific Blueprint Grid */
+        }
+        .mcq-btn { background: #1a1a1a; color: #fff; border: 1px solid #444; padding: 12px; width: 100%; margin: 8px 0; border-radius: 8px; cursor: pointer; transition: 0.2s; font-family: monospace; }
+        .mcq-btn:hover { background: var(--gold); color: black; border-color: white; transform: scale(1.02); }
+
+        canvas { background: #000; border: 1px solid #333; border-radius: 15px; width: 100%; height: 300px; touch-action: none; display: block; cursor: crosshair; }
+        .ai-btn { background: linear-gradient(45deg, #111, #222); color: var(--gold); width: 100%; margin-top: 15px; padding: 15px; border-radius: 10px; border: 1px solid var(--gold); font-weight: bold; cursor: pointer; text-transform: uppercase; letter-spacing: 2px; }
         
-        canvas { background: #000; border: 2px solid #333; border-radius: 15px; touch-action: none; cursor: crosshair; }
-        .ai-btn { background: var(--accent); color: white; width: 100%; margin-top: 10px; padding: 15px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; }
-        
-        #verify-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #1a1a1a; border: 2px solid var(--gold); padding: 20px; border-radius: 20px; z-index: 1000; width: 300px; text-align: center; box-shadow: 0 0 50px rgba(0,0,0,0.9); }
-        .mcq-btn { background: #333; color: white; border: 1px solid #444; padding: 10px; width: 100%; margin: 5px 0; border-radius: 10px; cursor: pointer; }
-        
-        .disclaimer { font-size: 0.6rem; color: #555; margin-top: 20px; text-align: center; letter-spacing: 1px; }
+        #button-grid { display: grid; gap: 8px; }
         #sketch-zone, #photo-zone { display: none; width: 100%; }
-        #file-input { display: none; }
-        .upload-label { display: block; background: #111; padding: 40px; border-radius: 15px; border: 2px dashed #444; color: #666; cursor: pointer; text-align: center; }
+        .upload-label { display: block; background: #0a0a0a; padding: 60px 20px; border-radius: 15px; border: 2px dashed #333; color: #444; cursor: pointer; transition: 0.3s; text-align: center; }
+        .upload-label:hover { border-color: var(--gold); color: var(--gold); }
+        .disclaimer { font-size: 0.55rem; color: #444; margin-top: 20px; text-align: center; letter-spacing: 1px; }
     </style>
 </head>
 <body>
@@ -54,36 +58,34 @@
     <div class="calc-container">
         <input type="text" id="display" readonly value="0">
         
-        <div id="math-ui">
-            <div id="button-grid"></div>
-        </div>
+        <div id="math-ui"><div id="button-grid"></div></div>
 
         <div id="sketch-zone">
-            <canvas id="canvas" width="310" height="280"></canvas>
+            <canvas id="canvas"></canvas>
             <div style="display:flex; gap:10px; margin-top:10px;">
-                <button style="flex:1; background:#333; color:white; box-shadow:none;" onclick="clearCanvas()">Clear</button>
-                <button class="ai-btn" style="flex:2; margin:0;" onclick="processAI('canvas')">SOLVE SKETCH</button>
+                <button style="flex:1; background:#222; color:#666; border:none; border-radius:8px; cursor:pointer;" onclick="clearCanvas()">Clear</button>
+                <button class="ai-btn" style="flex:3; margin:0;" onclick="processAI('canvas')">Run AI Scan</button>
             </div>
         </div>
 
         <div id="photo-zone">
-            <label for="file-input" class="upload-label">Upload Photo of Problem</label>
+            <label for="file-input" class="upload-label" id="upload-box">
+                [ SCAN MATHEMATICAL PROBLEM ]
+            </label>
             <input type="file" id="file-input" accept="image/*" onchange="processAI('file')">
         </div>
 
-        <div class="disclaimer">NOTE: AI can make mistakes. Please verify important results.</div>
+        <div class="disclaimer">NOTE: AI MAY MAKE MISTAKES. VERIFY RESULTS.</div>
     </div>
 
     <div id="verify-modal">
-        <h4 style="color:var(--gold); margin-top:0;">AI is confused...</h4>
-        <p style="font-size:0.8rem;">Did you mean one of these?</p>
+        <div style="font-size: 0.7rem; color: var(--gold); margin-bottom: 15px; letter-spacing: 2px; font-weight: bold;">NEURAL VERIFICATION</div>
         <div id="mcq-options"></div>
-        <button onclick="closeModal()" style="margin-top:10px; background:transparent; border:none; color:#666; cursor:pointer;">Cancel</button>
+        <button onclick="closeModal()" style="margin-top:15px; background:transparent; border:none; color:#555; cursor:pointer; font-size:0.7rem; text-decoration: underline;">ABORT REQUEST</button>
     </div>
 
     <script>
         const d = document.getElementById('display');
-        const grid = document.getElementById('button-grid');
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         let drawing = false;
@@ -97,81 +99,94 @@
             document.getElementById('photo-zone').style.display = (mode === 'photo') ? 'block' : 'none';
             
             if(mode === 'std' || mode === 'sci') renderButtons(mode);
-            if(mode === 'draw') initCanvas();
-        }
-
-        function renderButtons(mode) {
-            grid.innerHTML = '';
-            let btns = (mode === 'std') ? 
-                ['C', '/', '*', '⌫', '7', '8', '9', '-', '4', '5', '6', '+', '1', '2', '3', '.', '0', '='] :
-                ['sin', 'cos', 'tan', 'C', 'sqrt', '(', ')', '^', '/', '7', '8', '9', '*', '⌫', '4', '5', '6', '-', '1', '2', '3', '+', '0', '.', '='];
-
-            grid.style.gridTemplateColumns = (mode === 'std') ? 'repeat(4, 1fr)' : 'repeat(5, 1fr)';
-
-            btns.forEach(b => {
-                const btn = document.createElement('button');
-                btn.innerText = b;
-                if(['/', '*', '-', '+', '=', 'sin', 'cos', 'tan', 'sqrt', '^'].includes(b)) btn.className = 'op';
-                if(b === '=') { btn.className = 'equal'; btn.onclick = solve; }
-                else if(b === 'C') btn.onclick = () => d.value = '0';
-                else if(b === '⌫') btn.onclick = () => d.value = d.value.slice(0, -1) || '0';
-                else btn.onclick = () => d.value = (d.value === '0') ? b : d.value + b;
-                grid.appendChild(btn);
-            });
+            if(mode === 'draw') setTimeout(initCanvas, 50);
         }
 
         async function processAI(source) {
-            d.value = "Scanning...";
+            d.value = "ANALYZING...";
             const input = (source === 'canvas') ? canvas : document.getElementById('file-input').files[0];
-            
             try {
                 const result = await Tesseract.recognize(input, 'eng');
-                let conf = result.data.confidence;
                 let text = result.data.text.toLowerCase().replace(/[?a-z]/g, "").replace(/\s/g, "");
-
-                if (conf < 70 && text.length > 0) {
-                    showMCQ(text);
-                } else if (text.length > 0) {
-                    d.value = text;
-                    solve();
-                } else { d.value = "Unreadable"; }
-            } catch (err) { d.value = "AI Error"; }
+                if (text.length > 0) showMCQ(text);
+                else d.value = "RE-DRAW CLEARLY";
+            } catch (err) { d.value = "SCAN_ERROR"; }
         }
 
-        function showMCQ(detected) {
+        function showMCQ(raw) {
             const modal = document.getElementById('verify-modal');
             const options = document.getElementById('mcq-options');
             options.innerHTML = '';
             modal.style.display = 'block';
 
-            let guesses = [detected, detected.replace(/s/g, '5').replace(/z/g, '2').replace(/o/g, '0')];
-            [...new Set(guesses)].forEach(g => {
+            // Correcting common OCR failures (S=5, Z=2, O=0)
+            let corrected = raw.replace(/s/g, '5').replace(/z/g, '2').replace(/o/g, '0');
+            let guesses = [...new Set([raw, corrected])];
+
+            guesses.forEach(g => {
                 const btn = document.createElement('button');
                 btn.className = 'mcq-btn';
-                btn.innerText = `Equation: ${g}`;
+                btn.innerText = `RESOLVE AS: ${g}`;
                 btn.onclick = () => { d.value = g; solve(); closeModal(); };
                 options.appendChild(btn);
             });
         }
 
         function closeModal() { document.getElementById('verify-modal').style.display = 'none'; }
-        function solve() { try { d.value = math.evaluate(d.value); } catch (e) { d.value = "Format Error"; } }
+        function solve() { try { d.value = math.evaluate(d.value); } catch (e) { d.value = "MATH_ERROR"; } }
 
         function initCanvas() {
-            ctx.strokeStyle = 'white'; ctx.lineWidth = 12; ctx.lineCap = 'round';
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+            ctx.strokeStyle = 'white'; ctx.lineWidth = 10; ctx.lineCap = 'round';
             ctx.fillStyle = "black"; ctx.fillRect(0, 0, canvas.width, canvas.height);
         }
 
-        canvas.onmousedown = () => drawing = true;
-        canvas.onmouseup = () => { drawing = false; ctx.beginPath(); };
-        canvas.onmousemove = (e) => {
-            if (!drawing) return;
-            const r = canvas.getBoundingClientRect();
-            ctx.lineTo(e.clientX - r.left, e.clientY - r.top);
-            ctx.stroke();
+        function getPos(e) {
+            const rect = canvas.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            return { x: clientX - rect.left, y: clientY - rect.top };
+        }
+
+        canvas.onmousedown = canvas.ontouchstart = (e) => { 
+            drawing = true; 
+            const p = getPos(e); 
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y); 
+            if(e.touches) e.preventDefault(); 
         };
+        canvas.onmouseup = canvas.ontouchend = () => { drawing = false; };
+        canvas.onmousemove = canvas.ontouchmove = (e) => {
+            if (!drawing) return;
+            const p = getPos(e);
+            ctx.lineTo(p.x, p.y);
+            ctx.stroke();
+            if(e.touches) e.preventDefault();
+        };
+
         function clearCanvas() { ctx.fillRect(0, 0, canvas.width, canvas.height); }
 
+        function renderButtons(mode) {
+            const grid = document.getElementById('button-grid');
+            grid.innerHTML = '';
+            let btns = (mode === 'std') ? 
+                ['C', '/', '*', '⌫', '7', '8', '9', '-', '4', '5', '6', '+', '1', '2', '3', '.', '0', '='] : 
+                ['sin', 'cos', 'tan', 'sqrt', '(', ')', '^', '/', '7', '8', '9', '*', '4', '5', '6', '-', '1', '2', '3', '+', '0', '.', 'C', '='];
+            
+            grid.style.gridTemplateColumns = (mode === 'std') ? 'repeat(4, 1fr)' : 'repeat(6, 1fr)';
+            
+            btns.forEach(b => {
+                const btn = document.createElement('button');
+                btn.innerText = b; btn.style.height = '45px'; btn.style.background = '#1a1a1a'; btn.style.color = '#fff'; btn.style.border = 'none'; btn.style.borderRadius = '5px'; btn.style.cursor = 'pointer';
+                if(b === '=') { btn.style.background = 'var(--gold)'; btn.style.color = 'black'; btn.onclick = solve; }
+                else if(b === 'C') btn.onclick = () => d.value = '0';
+                else if(b === '⌫') btn.onclick = () => d.value = d.value.slice(0, -1) || '0';
+                else btn.onclick = () => d.value = (d.value === '0') ? b : d.value + b;
+                grid.appendChild(btn);
+            });
+        }
         renderButtons('std');
     </script>
 </body>
