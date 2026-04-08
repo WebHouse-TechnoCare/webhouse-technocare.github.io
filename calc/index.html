@@ -16,12 +16,13 @@
         .home-btn:hover img { opacity: 1; }
 
         .calc-container { background: var(--panel); padding: 25px; border-radius: 30px; border: 1px solid #222; width: 360px; box-shadow: 0 40px 100px rgba(0,0,0,0.9); position: relative; }
-        #display { width: 100%; height: 85px; background: #000; border: none; color: var(--gold); font-size: 1.6rem; text-align: right; padding: 20px; box-sizing: border-box; border-radius: 15px; margin-bottom: 20px; font-family: 'Courier New', monospace; box-shadow: inset 0 0 20px #000; }
+        #display { width: 100%; height: 85px; background: #000; border: none; color: var(--gold); font-size: 1.6rem; text-align: right; padding: 20px; box-sizing: border-box; border-radius: 15px; margin-bottom: 20px; font-family: 'Courier New', monospace; box-shadow: inset 0 0 20px #000; overflow: hidden; }
         
         .tabs { display: flex; gap: 5px; margin-bottom: 15px; width: 100%; }
         .tab-btn { background: #1a1a1a; border: 1px solid #333; color: #555; padding: 10px; border-radius: 10px; cursor: pointer; font-size: 0.6rem; text-transform: uppercase; flex: 1; transition: 0.3s; }
         .tab-btn.active { border-color: var(--gold); color: var(--gold); background: #221d10; }
 
+        /* Scientific Blueprint Modal */
         #verify-modal { 
             display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
             background: rgba(10, 10, 10, 0.98); backdrop-filter: blur(15px); 
@@ -30,8 +31,9 @@
             background-image: linear-gradient(rgba(212, 175, 55, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(212, 175, 55, 0.05) 1px, transparent 1px);
             background-size: 20px 20px;
         }
-        .mcq-btn { background: #1a1a1a; color: #fff; border: 1px solid #444; padding: 12px; width: 100%; margin: 8px 0; border-radius: 8px; cursor: pointer; transition: 0.2s; font-family: monospace; }
-        .mcq-btn:hover { background: var(--gold); color: black; border-color: white; transform: scale(1.02); }
+        .mcq-btn { background: #1a1a1a; color: #fff; border: 1px solid #444; padding: 10px; width: 100%; margin: 5px 0; border-radius: 8px; cursor: pointer; transition: 0.2s; font-family: monospace; font-size: 0.8rem; }
+        .mcq-btn:hover { background: var(--gold); color: black; border-color: white; }
+        .mcq-edit { background: #333; color: var(--gold); border: 1px dashed var(--gold); }
 
         canvas { background: #000; border: 1px solid #333; border-radius: 15px; width: 100%; height: 300px; touch-action: none; display: block; cursor: crosshair; }
         .ai-btn { background: linear-gradient(45deg, #111, #222); color: var(--gold); width: 100%; margin-top: 15px; padding: 15px; border-radius: 10px; border: 1px solid var(--gold); font-weight: bold; cursor: pointer; text-transform: uppercase; letter-spacing: 2px; }
@@ -63,22 +65,22 @@
             <canvas id="canvas"></canvas>
             <div style="display:flex; gap:10px; margin-top:10px;">
                 <button style="flex:1; background:#222; color:#666; border:none; border-radius:8px; cursor:pointer;" onclick="clearCanvas()">Clear</button>
-                <button class="ai-btn" style="flex:3; margin:0;" onclick="processAI('canvas')">Run AI Scan</button>
+                <button class="ai-btn" style="flex:3; margin:0;" onclick="processAI('canvas')">Solve Handwriting</button>
             </div>
         </div>
 
         <div id="photo-zone">
-            <label for="file-input" class="upload-label" id="upload-box"> [ SCAN MATHEMATICAL PROBLEM ] </label>
+            <label for="file-input" class="upload-label" id="upload-box"> [ UPLOAD MATH IMAGE ] </label>
             <input type="file" id="file-input" accept="image/*" onchange="processAI('file')">
         </div>
 
-        <div class="disclaimer">NOTE: AI MAY MAKE MISTAKES. VERIFY RESULTS.</div>
+        <div class="disclaimer">V4.0 NEURAL ENGINE | AI CAN MAKE MISTAKES</div>
     </div>
 
     <div id="verify-modal">
-        <div style="font-size: 0.7rem; color: var(--gold); margin-bottom: 15px; letter-spacing: 2px; font-weight: bold;">NEURAL VERIFICATION</div>
+        <div style="font-size: 0.7rem; color: var(--gold); margin-bottom: 10px; letter-spacing: 2px; font-weight: bold;">AI INTERPRETATION</div>
         <div id="mcq-options"></div>
-        <button onclick="closeModal()" style="margin-top:15px; background:transparent; border:none; color:#555; cursor:pointer; font-size:0.7rem; text-decoration: underline;">ABORT REQUEST</button>
+        <button onclick="closeModal()" style="margin-top:10px; background:transparent; border:none; color:#555; cursor:pointer; font-size:0.6rem; text-decoration: underline;">CANCEL</button>
     </div>
 
     <script>
@@ -100,24 +102,14 @@
         }
 
         async function processAI(source) {
-            d.value = "ANALYZING...";
+            d.value = "NEURAL SCANNING...";
             const input = (source === 'canvas') ? canvas : document.getElementById('file-input').files[0];
             try {
-                // Perform recognition
                 const result = await Tesseract.recognize(input, 'eng');
-                
-                // Clean the text: keep only numbers and math symbols
-                let text = result.data.text.toLowerCase().replace(/[^\d\+\-\*\/\(\)\.\^]/g, "");
-                
-                if (text.length > 0) {
-                    showMCQ(text);
-                } else {
-                    d.value = "RE-DRAW CLEARLY";
-                }
-            } catch (err) { 
-                console.error(err);
-                d.value = "SCAN_ERROR"; 
-            }
+                let text = result.data.text.toLowerCase().replace(/[^\d\+\-\*\/\(\)\.\^sincostan]/g, "");
+                if (text.length > 0) showMCQ(text);
+                else d.value = "RE-DRAW CLEARLY";
+            } catch (err) { d.value = "SCAN_ERROR"; }
         }
 
         function showMCQ(raw) {
@@ -126,41 +118,51 @@
             options.innerHTML = '';
             modal.style.display = 'block';
 
-            // OCR correction logic
-            let corrected = raw.replace(/s/g, '5').replace(/z/g, '2').replace(/o/g, '0');
-            let guesses = [...new Set([raw, corrected])];
+            // Generate 5 Smart Variations
+            let v1 = raw;
+            let v2 = raw.replace(/s/g, '5').replace(/z/g, '2').replace(/o/g, '0');
+            let v3 = raw.replace(/5/g, 's').replace(/2/g, 'z').replace(/0/g, 'o');
+            let v4 = raw.replace(/x/g, '*').replace(/÷/g, '/');
+            let variations = [...new Set([v1, v2, v3, v4])].slice(0, 4);
 
-            guesses.forEach(g => {
+            variations.forEach(g => {
                 const btn = document.createElement('button');
                 btn.className = 'mcq-btn';
-                btn.innerText = `RESOLVE AS: ${g}`;
+                btn.innerText = `Result: ${g}`;
                 btn.onclick = () => { d.value = g; solve(); closeModal(); };
                 options.appendChild(btn);
             });
+
+            // Final Manual Option
+            const editBtn = document.createElement('button');
+            editBtn.className = 'mcq-btn mcq-edit';
+            editBtn.innerText = "Manual Correction";
+            editBtn.onclick = () => { 
+                let manual = prompt("AI was close. Please correct the equation:", raw);
+                if(manual) { d.value = manual; solve(); }
+                closeModal(); 
+            };
+            options.appendChild(editBtn);
         }
 
         function closeModal() { document.getElementById('verify-modal').style.display = 'none'; }
         
         function solve() { 
             try { 
-                // Fix for visual multiplication/division symbols
                 let exp = d.value.replace(/×/g, '*').replace(/÷/g, '/');
                 let res = math.evaluate(exp); 
                 d.value = math.format(res, {precision: 10}); 
-            } catch (e) { 
-                d.value = "MATH_ERROR"; 
-            } 
+            } catch (e) { d.value = "MATH_ERROR"; } 
         }
 
         function initCanvas() {
             const rect = canvas.getBoundingClientRect();
             canvas.width = rect.width;
             canvas.height = rect.height;
-            // Setup drawing styles AFTER resizing canvas
             ctx.fillStyle = "black"; 
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.strokeStyle = 'white'; 
-            ctx.lineWidth = 10; 
+            ctx.lineWidth = 12; 
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
         }
@@ -172,59 +174,34 @@
             return { x: clientX - rect.left, y: clientY - rect.top };
         }
 
-        function startDraw(e) {
-            drawing = true;
-            const p = getPos(e);
-            ctx.beginPath();
-            ctx.moveTo(p.x, p.y);
-            if(e.touches) e.preventDefault();
-        }
+        canvas.addEventListener('mousedown', (e) => { drawing = true; const p = getPos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); });
+        canvas.addEventListener('mousemove', (e) => { if (!drawing) return; const p = getPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); });
+        canvas.addEventListener('mouseup', () => drawing = false);
+        canvas.addEventListener('touchstart', (e) => { drawing = true; const p = getPos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); e.preventDefault(); }, {passive: false});
+        canvas.addEventListener('touchmove', (e) => { if (!drawing) return; const p = getPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); e.preventDefault(); }, {passive: false});
+        canvas.addEventListener('touchend', () => drawing = false);
 
-        function moveDraw(e) {
-            if (!drawing) return;
-            const p = getPos(e);
-            ctx.lineTo(p.x, p.y);
-            ctx.stroke();
-            if(e.touches) e.preventDefault();
-        }
-
-        function stopDraw() { drawing = false; ctx.closePath(); }
-
-        canvas.addEventListener('mousedown', startDraw);
-        canvas.addEventListener('mousemove', moveDraw);
-        canvas.addEventListener('mouseup', stopDraw);
-        canvas.addEventListener('touchstart', startDraw, {passive: false});
-        canvas.addEventListener('touchmove', moveDraw, {passive: false});
-        canvas.addEventListener('touchend', stopDraw);
-
-        function clearCanvas() { 
-            ctx.fillStyle = "black";
-            ctx.fillRect(0, 0, canvas.width, canvas.height); 
-        }
+        function clearCanvas() { ctx.fillStyle = "black"; ctx.fillRect(0, 0, canvas.width, canvas.height); }
 
         function renderButtons(mode) {
             const grid = document.getElementById('button-grid');
             grid.innerHTML = '';
             let btns = (mode === 'std') ? 
                 ['C', '/', '*', '⌫', '7', '8', '9', '-', '4', '5', '6', '+', '1', '2', '3', '.', '0', '='] : 
-                ['sin', 'cos', 'tan', 'sqrt', '(', ')', '^', '/', '7', '8', '9', '*', '4', '5', '6', '-', '1', '2', '3', '+', '0', '.', 'C', '='];
+                ['sin', 'cos', 'tan', 'sqrt', '(', ')', '^', '/', '7', '8', '9', '*', '4', '5', '6', '-', '1', '2', '3', '+', '0', '.', '⌫', 'C', '='];
             
             grid.style.gridTemplateColumns = (mode === 'std') ? 'repeat(4, 1fr)' : 'repeat(6, 1fr)';
             
             btns.forEach(b => {
                 const btn = document.createElement('button');
                 btn.innerText = b; 
-                btn.style.height = '45px'; 
+                btn.style.height = '42px'; 
                 btn.style.background = '#1a1a1a'; 
                 btn.style.color = '#fff'; 
                 btn.style.border = 'none'; 
                 btn.style.borderRadius = '5px'; 
-                btn.style.cursor = 'pointer';
-                if(b === '=') { 
-                    btn.style.background = 'var(--gold)'; 
-                    btn.style.color = 'black'; 
-                    btn.onclick = solve; 
-                }
+                btn.style.fontSize = (mode === 'sci') ? '0.7rem' : '1rem';
+                if(b === '=') { btn.style.background = 'var(--gold)'; btn.style.color = 'black'; btn.onclick = solve; }
                 else if(b === 'C') btn.onclick = () => d.value = '0';
                 else if(b === '⌫') btn.onclick = () => d.value = d.value.slice(0, -1) || '0';
                 else btn.onclick = () => d.value = (d.value === '0') ? b : d.value + b;
