@@ -22,14 +22,13 @@
         .tab-btn { background: #1a1a1a; border: 1px solid #333; color: #555; padding: 10px; border-radius: 10px; cursor: pointer; font-size: 0.6rem; text-transform: uppercase; flex: 1; transition: 0.3s; }
         .tab-btn.active { border-color: var(--gold); color: var(--gold); background: #221d10; }
 
-        /* Scientific MCQ Modal */
         #verify-modal { 
             display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
             background: rgba(10, 10, 10, 0.98); backdrop-filter: blur(15px); 
             border: 1px solid var(--gold); padding: 25px; border-radius: 20px; z-index: 1000; width: 320px; 
             text-align: center; box-shadow: 0 0 50px rgba(212, 175, 55, 0.4);
             background-image: linear-gradient(rgba(212, 175, 55, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(212, 175, 55, 0.05) 1px, transparent 1px);
-            background-size: 20px 20px; /* Scientific Blueprint Grid */
+            background-size: 20px 20px;
         }
         .mcq-btn { background: #1a1a1a; color: #fff; border: 1px solid #444; padding: 12px; width: 100%; margin: 8px 0; border-radius: 8px; cursor: pointer; transition: 0.2s; font-family: monospace; }
         .mcq-btn:hover { background: var(--gold); color: black; border-color: white; transform: scale(1.02); }
@@ -69,9 +68,7 @@
         </div>
 
         <div id="photo-zone">
-            <label for="file-input" class="upload-label" id="upload-box">
-                [ SCAN MATHEMATICAL PROBLEM ]
-            </label>
+            <label for="file-input" class="upload-label" id="upload-box"> [ SCAN MATHEMATICAL PROBLEM ] </label>
             <input type="file" id="file-input" accept="image/*" onchange="processAI('file')">
         </div>
 
@@ -106,11 +103,21 @@
             d.value = "ANALYZING...";
             const input = (source === 'canvas') ? canvas : document.getElementById('file-input').files[0];
             try {
+                // Perform recognition
                 const result = await Tesseract.recognize(input, 'eng');
-                let text = result.data.text.toLowerCase().replace(/[?a-z]/g, "").replace(/\s/g, "");
-                if (text.length > 0) showMCQ(text);
-                else d.value = "RE-DRAW CLEARLY";
-            } catch (err) { d.value = "SCAN_ERROR"; }
+                
+                // Clean the text: keep only numbers and math symbols
+                let text = result.data.text.toLowerCase().replace(/[^\d\+\-\*\/\(\)\.\^]/g, "");
+                
+                if (text.length > 0) {
+                    showMCQ(text);
+                } else {
+                    d.value = "RE-DRAW CLEARLY";
+                }
+            } catch (err) { 
+                console.error(err);
+                d.value = "SCAN_ERROR"; 
+            }
         }
 
         function showMCQ(raw) {
@@ -119,7 +126,7 @@
             options.innerHTML = '';
             modal.style.display = 'block';
 
-            // Correcting common OCR failures (S=5, Z=2, O=0)
+            // OCR correction logic
             let corrected = raw.replace(/s/g, '5').replace(/z/g, '2').replace(/o/g, '0');
             let guesses = [...new Set([raw, corrected])];
 
@@ -133,14 +140,29 @@
         }
 
         function closeModal() { document.getElementById('verify-modal').style.display = 'none'; }
-        function solve() { try { d.value = math.evaluate(d.value); } catch (e) { d.value = "MATH_ERROR"; } }
+        
+        function solve() { 
+            try { 
+                // Fix for visual multiplication/division symbols
+                let exp = d.value.replace(/×/g, '*').replace(/÷/g, '/');
+                let res = math.evaluate(exp); 
+                d.value = math.format(res, {precision: 10}); 
+            } catch (e) { 
+                d.value = "MATH_ERROR"; 
+            } 
+        }
 
         function initCanvas() {
             const rect = canvas.getBoundingClientRect();
             canvas.width = rect.width;
             canvas.height = rect.height;
-            ctx.strokeStyle = 'white'; ctx.lineWidth = 10; ctx.lineCap = 'round';
-            ctx.fillStyle = "black"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            // Setup drawing styles AFTER resizing canvas
+            ctx.fillStyle = "black"; 
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.strokeStyle = 'white'; 
+            ctx.lineWidth = 10; 
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
         }
 
         function getPos(e) {
@@ -150,23 +172,35 @@
             return { x: clientX - rect.left, y: clientY - rect.top };
         }
 
-        canvas.onmousedown = canvas.ontouchstart = (e) => { 
-            drawing = true; 
-            const p = getPos(e); 
+        function startDraw(e) {
+            drawing = true;
+            const p = getPos(e);
             ctx.beginPath();
-            ctx.moveTo(p.x, p.y); 
-            if(e.touches) e.preventDefault(); 
-        };
-        canvas.onmouseup = canvas.ontouchend = () => { drawing = false; };
-        canvas.onmousemove = canvas.ontouchmove = (e) => {
+            ctx.moveTo(p.x, p.y);
+            if(e.touches) e.preventDefault();
+        }
+
+        function moveDraw(e) {
             if (!drawing) return;
             const p = getPos(e);
             ctx.lineTo(p.x, p.y);
             ctx.stroke();
             if(e.touches) e.preventDefault();
-        };
+        }
 
-        function clearCanvas() { ctx.fillRect(0, 0, canvas.width, canvas.height); }
+        function stopDraw() { drawing = false; ctx.closePath(); }
+
+        canvas.addEventListener('mousedown', startDraw);
+        canvas.addEventListener('mousemove', moveDraw);
+        canvas.addEventListener('mouseup', stopDraw);
+        canvas.addEventListener('touchstart', startDraw, {passive: false});
+        canvas.addEventListener('touchmove', moveDraw, {passive: false});
+        canvas.addEventListener('touchend', stopDraw);
+
+        function clearCanvas() { 
+            ctx.fillStyle = "black";
+            ctx.fillRect(0, 0, canvas.width, canvas.height); 
+        }
 
         function renderButtons(mode) {
             const grid = document.getElementById('button-grid');
@@ -179,8 +213,18 @@
             
             btns.forEach(b => {
                 const btn = document.createElement('button');
-                btn.innerText = b; btn.style.height = '45px'; btn.style.background = '#1a1a1a'; btn.style.color = '#fff'; btn.style.border = 'none'; btn.style.borderRadius = '5px'; btn.style.cursor = 'pointer';
-                if(b === '=') { btn.style.background = 'var(--gold)'; btn.style.color = 'black'; btn.onclick = solve; }
+                btn.innerText = b; 
+                btn.style.height = '45px'; 
+                btn.style.background = '#1a1a1a'; 
+                btn.style.color = '#fff'; 
+                btn.style.border = 'none'; 
+                btn.style.borderRadius = '5px'; 
+                btn.style.cursor = 'pointer';
+                if(b === '=') { 
+                    btn.style.background = 'var(--gold)'; 
+                    btn.style.color = 'black'; 
+                    btn.onclick = solve; 
+                }
                 else if(b === 'C') btn.onclick = () => d.value = '0';
                 else if(b === '⌫') btn.onclick = () => d.value = d.value.slice(0, -1) || '0';
                 else btn.onclick = () => d.value = (d.value === '0') ? b : d.value + b;
