@@ -8,52 +8,60 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
     <style>
-        :root { --gold: #d4af37; --bg: #0a0a0a; --panel: #151515; --accent: #4CAF50; }
-        body { background: var(--bg); color: #e0e0e0; font-family: 'Helvetica Neue', sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; overflow-x: hidden; }
+        :root { --gold: #d4af37; --bg: #0a0a0a; --panel: #151515; --accent: #4CAF50; --silver: #e0e0e0; }
+        body { background: var(--bg); color: #e0e0e0; font-family: 'Helvetica Neue', sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; overflow: hidden; }
         
-        /* Main Container */
-        .calc-container { background: var(--panel); padding: 25px; border-radius: 30px; border: 1px solid #222; width: 360px; position: relative; }
-        #display { width: 100%; height: 80px; background: #000; border: none; color: var(--gold); font-size: 1.4rem; text-align: right; padding: 15px; box-sizing: border-box; border-radius: 15px; margin-bottom: 20px; font-family: monospace; }
-        
-        /* AI Verification Modal */
-        #verify-modal {
-            display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: #1a1a1a; border: 2px solid var(--gold); padding: 20px; border-radius: 20px;
-            z-index: 1000; width: 300px; text-align: center; box-shadow: 0 0 50px rgba(0,0,0,0.9);
-        }
-        .mcq-btn { background: #333; color: white; border: 1px solid #444; padding: 10px; width: 100%; margin: 5px 0; border-radius: 10px; cursor: pointer; }
-        .mcq-btn:hover { border-color: var(--gold); }
+        .home-btn { position: absolute; top: 30px; left: 30px; z-index: 100; }
+        .home-btn img { height: 40px; opacity: 0.5; transition: 0.3s; }
+        .home-btn:hover img { opacity: 1; }
 
-        .tabs { display: flex; gap: 8px; margin-bottom: 15px; }
-        .tab-btn { background: #1a1a1a; border: 1px solid #333; color: #666; padding: 8px 12px; border-radius: 20px; cursor: pointer; font-size: 0.65rem; text-transform: uppercase; }
-        .tab-btn.active { border-color: var(--gold); color: var(--gold); }
+        .calc-container { background: var(--panel); padding: 25px; border-radius: 30px; border: 1px solid #222; width: 360px; position: relative; box-shadow: 0 30px 60px rgba(0,0,0,0.8); }
+        #display { width: 100%; height: 80px; background: #000; border: none; color: var(--gold); font-size: 1.4rem; text-align: right; padding: 15px; box-sizing: border-box; border-radius: 15px; margin-bottom: 20px; font-family: monospace; box-shadow: inset 0 0 15px rgba(0,0,0,1); }
+        
+        .tabs { display: flex; gap: 8px; margin-bottom: 15px; flex-wrap: wrap; justify-content: center; }
+        .tab-btn { background: #1a1a1a; border: 1px solid #333; color: #666; padding: 8px 12px; border-radius: 20px; cursor: pointer; font-size: 0.65rem; text-transform: uppercase; transition: 0.3s; }
+        .tab-btn.active { border-color: var(--gold); color: var(--gold); background: rgba(212, 175, 55, 0.1); }
+
+        #button-grid { display: grid; gap: 10px; }
+        button { height: 50px; border-radius: 8px; border: none; background: #222; color: var(--silver); font-size: 1rem; cursor: pointer; transition: 0.1s; box-shadow: 0 3px 0 #000; }
+        button:active { transform: translateY(2px); box-shadow: none; }
+        .op { color: var(--gold); }
+        .equal { background: var(--gold); color: black; font-weight: bold; }
         
         canvas { background: #000; border: 2px solid #333; border-radius: 15px; touch-action: none; cursor: crosshair; }
         .ai-btn { background: var(--accent); color: white; width: 100%; margin-top: 10px; padding: 15px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; }
         
-        .disclaimer { font-size: 0.6rem; color: #555; margin-top: 20px; letter-spacing: 1px; }
+        #verify-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #1a1a1a; border: 2px solid var(--gold); padding: 20px; border-radius: 20px; z-index: 1000; width: 300px; text-align: center; box-shadow: 0 0 50px rgba(0,0,0,0.9); }
+        .mcq-btn { background: #333; color: white; border: 1px solid #444; padding: 10px; width: 100%; margin: 5px 0; border-radius: 10px; cursor: pointer; }
+        
+        .disclaimer { font-size: 0.6rem; color: #555; margin-top: 20px; text-align: center; letter-spacing: 1px; }
         #sketch-zone, #photo-zone { display: none; width: 100%; }
         #file-input { display: none; }
-        .upload-label { display: block; background: #111; padding: 40px; border-radius: 15px; border: 2px dashed #444; color: #666; cursor: pointer; }
+        .upload-label { display: block; background: #111; padding: 40px; border-radius: 15px; border: 2px dashed #444; color: #666; cursor: pointer; text-align: center; }
     </style>
 </head>
 <body>
 
+    <a href="/" class="home-btn"><img src="/logo1.png" alt="Home"></a>
+
     <div class="tabs">
-        <button class="tab-btn active" onclick="setMode('std')">Standard</button>
-        <button class="tab-btn" onclick="setMode('draw')">Sketch AI</button>
-        <button class="tab-btn" onclick="setMode('photo')">Photo AI</button>
+        <button class="tab-btn active" onclick="setMode(event, 'std')">Standard</button>
+        <button class="tab-btn" onclick="setMode(event, 'sci')">Scientific</button>
+        <button class="tab-btn" onclick="setMode(event, 'draw')">Sketch AI</button>
+        <button class="tab-btn" onclick="setMode(event, 'photo')">Photo AI</button>
     </div>
 
     <div class="calc-container">
         <input type="text" id="display" readonly value="0">
         
-        <div id="math-ui"><div id="button-grid" style="display:grid; grid-template-columns: repeat(4,1fr); gap:10px;"></div></div>
+        <div id="math-ui">
+            <div id="button-grid"></div>
+        </div>
 
         <div id="sketch-zone">
-            <canvas id="canvas" width="310" height="300"></canvas>
+            <canvas id="canvas" width="310" height="280"></canvas>
             <div style="display:flex; gap:10px; margin-top:10px;">
-                <button style="flex:1; background:#333; color:white; border:none; border-radius:5px;" onclick="clearCanvas()">Clear</button>
+                <button style="flex:1; background:#333; color:white; box-shadow:none;" onclick="clearCanvas()">Clear</button>
                 <button class="ai-btn" style="flex:2; margin:0;" onclick="processAI('canvas')">SOLVE SKETCH</button>
             </div>
         </div>
@@ -75,16 +83,41 @@
 
     <script>
         const d = document.getElementById('display');
+        const grid = document.getElementById('button-grid');
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         let drawing = false;
 
-        function setMode(mode) {
-            document.getElementById('math-ui').style.display = (mode === 'std') ? 'block' : 'none';
+        function setMode(e, mode) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            if(e) e.target.classList.add('active');
+            
+            document.getElementById('math-ui').style.display = (mode === 'std' || mode === 'sci') ? 'block' : 'none';
             document.getElementById('sketch-zone').style.display = (mode === 'draw') ? 'block' : 'none';
             document.getElementById('photo-zone').style.display = (mode === 'photo') ? 'block' : 'none';
-            if(mode === 'std') renderButtons();
+            
+            if(mode === 'std' || mode === 'sci') renderButtons(mode);
             if(mode === 'draw') initCanvas();
+        }
+
+        function renderButtons(mode) {
+            grid.innerHTML = '';
+            let btns = (mode === 'std') ? 
+                ['C', '/', '*', '⌫', '7', '8', '9', '-', '4', '5', '6', '+', '1', '2', '3', '.', '0', '='] :
+                ['sin', 'cos', 'tan', 'C', 'sqrt', '(', ')', '^', '/', '7', '8', '9', '*', '⌫', '4', '5', '6', '-', '1', '2', '3', '+', '0', '.', '='];
+
+            grid.style.gridTemplateColumns = (mode === 'std') ? 'repeat(4, 1fr)' : 'repeat(5, 1fr)';
+
+            btns.forEach(b => {
+                const btn = document.createElement('button');
+                btn.innerText = b;
+                if(['/', '*', '-', '+', '=', 'sin', 'cos', 'tan', 'sqrt', '^'].includes(b)) btn.className = 'op';
+                if(b === '=') { btn.className = 'equal'; btn.onclick = solve; }
+                else if(b === 'C') btn.onclick = () => d.value = '0';
+                else if(b === '⌫') btn.onclick = () => d.value = d.value.slice(0, -1) || '0';
+                else btn.onclick = () => d.value = (d.value === '0') ? b : d.value + b;
+                grid.appendChild(btn);
+            });
         }
 
         async function processAI(source) {
@@ -96,15 +129,12 @@
                 let conf = result.data.confidence;
                 let text = result.data.text.toLowerCase().replace(/[?a-z]/g, "").replace(/\s/g, "");
 
-                // If confidence is low, show MCQ
                 if (conf < 70 && text.length > 0) {
                     showMCQ(text);
                 } else if (text.length > 0) {
                     d.value = text;
                     solve();
-                } else {
-                    d.value = "Unreadable";
-                }
+                } else { d.value = "Unreadable"; }
             } catch (err) { d.value = "AI Error"; }
         }
 
@@ -114,11 +144,8 @@
             options.innerHTML = '';
             modal.style.display = 'block';
 
-            // Generate "Smart Guesses"
             let guesses = [detected, detected.replace(/s/g, '5').replace(/z/g, '2').replace(/o/g, '0')];
-            let uniqueGuesses = [...new Set(guesses)];
-
-            uniqueGuesses.forEach(g => {
+            [...new Set(guesses)].forEach(g => {
                 const btn = document.createElement('button');
                 btn.className = 'mcq-btn';
                 btn.innerText = `Equation: ${g}`;
@@ -128,11 +155,7 @@
         }
 
         function closeModal() { document.getElementById('verify-modal').style.display = 'none'; }
-
-        function solve() {
-            try { d.value = math.evaluate(d.value); } 
-            catch (e) { d.value = "Format Error"; }
-        }
+        function solve() { try { d.value = math.evaluate(d.value); } catch (e) { d.value = "Format Error"; } }
 
         function initCanvas() {
             ctx.strokeStyle = 'white'; ctx.lineWidth = 12; ctx.lineCap = 'round';
@@ -148,25 +171,8 @@
             ctx.stroke();
         };
         function clearCanvas() { ctx.fillRect(0, 0, canvas.width, canvas.height); }
-        function renderButtons() {
-            const grid = document.getElementById('button-grid');
-            grid.innerHTML = '';
-            ['7','8','9','/','4','5','6','*','1','2','3','-','0','.','C','+','='].forEach(b => {
-                const btn = document.createElement('button');
-                btn.innerText = b;
-                btn.style.height = '50px';
-                btn.style.background = '#222';
-                btn.style.color = 'white';
-                btn.style.border = 'none';
-                btn.onclick = () => {
-                    if(b === '=') solve();
-                    else if(b === 'C') d.value = '0';
-                    else d.value = (d.value === '0') ? b : d.value + b;
-                };
-                grid.appendChild(btn);
-            });
-        }
-        renderButtons();
+
+        renderButtons('std');
     </script>
 </body>
 </html>
