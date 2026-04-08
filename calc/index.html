@@ -3,46 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CalcClock | AI Advanced Suite</title>
+    <title>CalcClock | Pro AI Suite</title>
     <link rel="icon" type="image/png" href="/logo1.png">
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    
     <style>
-        :root { --gold: #d4af37; --bg: #050505; --panel: #111; --accent: #00ff88; --silver: #e0e0e0; }
-        body { background: var(--bg); color: #e0e0e0; font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; overflow: hidden; }
+        :root { --gold: #d4af37; --bg: #050505; --panel: #111; --silver: #e0e0e0; --accent: #222; }
+        body { background: var(--bg); color: var(--silver); font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; overflow: hidden; }
         
         .home-btn { position: absolute; top: 20px; left: 20px; z-index: 100; }
         .home-btn img { height: 35px; opacity: 0.5; transition: 0.3s; }
         .home-btn:hover img { opacity: 1; }
 
-        .calc-container { background: var(--panel); padding: 25px; border-radius: 30px; border: 1px solid #222; width: 360px; box-shadow: 0 40px 100px rgba(0,0,0,0.9); position: relative; }
-        #display { width: 100%; height: 85px; background: #000; border: none; color: var(--gold); font-size: 1.6rem; text-align: right; padding: 20px; box-sizing: border-box; border-radius: 15px; margin-bottom: 20px; font-family: 'Courier New', monospace; box-shadow: inset 0 0 20px #000; overflow: hidden; }
+        .calc-container { background: var(--panel); padding: 25px; border-radius: 30px; border: 1px solid #222; width: 360px; box-sizing: border-box; box-shadow: 0 40px 100px rgba(0,0,0,0.9); position: relative; }
         
+        /* Display Panel */
+        .display-wrapper { background: #000; border-radius: 15px; margin-bottom: 20px; padding: 15px; box-shadow: inset 0 0 20px #000; min-height: 80px; display: flex; flex-direction: column; justify-content: center; }
+        #display { width: 100%; background: transparent; border: none; color: var(--gold); font-size: 1.8rem; text-align: right; font-family: 'Courier New', monospace; outline: none; padding: 0; margin: 0; }
+
+        /* Navigation Tabs */
         .tabs { display: flex; gap: 5px; margin-bottom: 15px; width: 100%; }
-        .tab-btn { background: #1a1a1a; border: 1px solid #333; color: #555; padding: 10px; border-radius: 10px; cursor: pointer; font-size: 0.6rem; text-transform: uppercase; flex: 1; transition: 0.3s; }
+        .tab-btn { background: #1a1a1a; border: 1px solid #333; color: #555; padding: 10px 5px; border-radius: 10px; cursor: pointer; font-size: 0.55rem; text-transform: uppercase; flex: 1; transition: 0.2s; font-weight: bold; }
         .tab-btn.active { border-color: var(--gold); color: var(--gold); background: #221d10; }
 
-        /* Scientific Blueprint Modal */
-        #verify-modal { 
-            display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
-            background: rgba(10, 10, 10, 0.98); backdrop-filter: blur(15px); 
-            border: 1px solid var(--gold); padding: 25px; border-radius: 20px; z-index: 1000; width: 320px; 
-            text-align: center; box-shadow: 0 0 50px rgba(212, 175, 55, 0.4);
-            background-image: linear-gradient(rgba(212, 175, 55, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(212, 175, 55, 0.05) 1px, transparent 1px);
-            background-size: 20px 20px;
-        }
-        .mcq-btn { background: #1a1a1a; color: #fff; border: 1px solid #444; padding: 10px; width: 100%; margin: 5px 0; border-radius: 8px; cursor: pointer; transition: 0.2s; font-family: monospace; font-size: 0.8rem; }
+        /* AI Output Modal */
+        #verify-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(10, 10, 10, 0.98); border: 1px solid var(--gold); padding: 25px; border-radius: 20px; z-index: 1000; width: 320px; text-align: center; box-shadow: 0 0 50px rgba(212, 175, 55, 0.2); }
+        .mcq-btn { background: #1a1a1a; color: #fff; border: 1px solid #444; padding: 12px; width: 100%; margin: 6px 0; border-radius: 8px; cursor: pointer; font-family: monospace; font-size: 0.9rem; transition: 0.2s; }
         .mcq-btn:hover { background: var(--gold); color: black; border-color: white; }
-        .mcq-edit { background: #333; color: var(--gold); border: 1px dashed var(--gold); }
 
-        canvas { background: #000; border: 1px solid #333; border-radius: 15px; width: 100%; height: 300px; touch-action: none; display: block; cursor: crosshair; }
-        .ai-btn { background: linear-gradient(45deg, #111, #222); color: var(--gold); width: 100%; margin-top: 15px; padding: 15px; border-radius: 10px; border: 1px solid var(--gold); font-weight: bold; cursor: pointer; text-transform: uppercase; letter-spacing: 2px; }
-        
-        #button-grid { display: grid; gap: 8px; }
+        /* Zones */
         #sketch-zone, #photo-zone { display: none; width: 100%; }
-        .upload-label { display: block; background: #0a0a0a; padding: 60px 20px; border-radius: 15px; border: 2px dashed #333; color: #444; cursor: pointer; transition: 0.3s; text-align: center; }
+        canvas { background: #000; border: 1px solid #333; border-radius: 15px; width: 100%; height: 300px; touch-action: none; cursor: crosshair; display: block; }
+        .ai-btn { background: linear-gradient(45deg, #111, #222); color: var(--gold); border: 1px solid var(--gold); width: 100%; padding: 15px; border-radius: 10px; font-weight: bold; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; transition: 0.2s; }
+        .ai-btn:hover { background: var(--gold); color: black; }
+        
+        .upload-label { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 200px; background: #0a0a0a; border-radius: 15px; border: 2px dashed #444; color: #666; cursor: pointer; transition: 0.3s; font-weight: bold; letter-spacing: 1px; font-size: 0.8rem; }
         .upload-label:hover { border-color: var(--gold); color: var(--gold); }
-        .disclaimer { font-size: 0.55rem; color: #444; margin-top: 20px; text-align: center; letter-spacing: 1px; }
+        #file-input { display: none; }
+        
+        /* Perfect Button Grids */
+        #button-grid { display: grid; gap: 8px; }
+        .calc-btn { background: #1a1a1a; color: #fff; border: none; border-radius: 6px; font-size: 1.1rem; cursor: pointer; transition: 0.1s; display: flex; align-items: center; justify-content: center; height: 48px; }
+        .calc-btn:active { transform: translateY(2px); }
+        .calc-btn.op { color: var(--gold); background: #222; font-size: 1.2rem; }
+        .calc-btn.eq { background: var(--gold); color: black; font-weight: bold; font-size: 1.4rem; }
+        .calc-btn.sci { font-size: 0.8rem; }
+        
+        .disclaimer { font-size: 0.55rem; color: #444; margin-top: 15px; text-align: center; letter-spacing: 1px; }
     </style>
 </head>
 <body>
@@ -57,34 +66,40 @@
     </div>
 
     <div class="calc-container">
-        <input type="text" id="display" readonly value="0">
+        <div class="display-wrapper">
+            <input type="text" id="display" readonly value="0">
+        </div>
         
         <div id="math-ui"><div id="button-grid"></div></div>
 
         <div id="sketch-zone">
             <canvas id="canvas"></canvas>
             <div style="display:flex; gap:10px; margin-top:10px;">
-                <button style="flex:1; background:#222; color:#666; border:none; border-radius:8px; cursor:pointer;" onclick="clearCanvas()">Clear</button>
-                <button class="ai-btn" style="flex:3; margin:0;" onclick="processAI('canvas')">Solve Handwriting</button>
+                <button style="flex:1; background:#222; color:#666; border:none; border-radius:8px; cursor:pointer;" onclick="clearCanvas()">CLEAR</button>
+                <button class="ai-btn" style="flex:3; margin:0;" onclick="processAI('canvas')">SOLVE SKETCH</button>
             </div>
         </div>
 
         <div id="photo-zone">
-            <label for="file-input" class="upload-label" id="upload-box"> [ UPLOAD MATH IMAGE ] </label>
+            <label for="file-input" class="upload-label"> 
+                <span>📷 SNAP PROBLEM</span>
+                <span style="font-size: 0.6rem; margin-top: 10px; font-weight: normal; color:#444;">Good lighting required</span>
+            </label>
             <input type="file" id="file-input" accept="image/*" onchange="processAI('file')">
         </div>
 
-        <div class="disclaimer">V4.0 NEURAL ENGINE | AI CAN MAKE MISTAKES</div>
+        <div class="disclaimer">V6.0 NEURAL ENGINE | MATH-STRICT WHITELIST</div>
     </div>
 
     <div id="verify-modal">
-        <div style="font-size: 0.7rem; color: var(--gold); margin-bottom: 10px; letter-spacing: 2px; font-weight: bold;">AI INTERPRETATION</div>
+        <div style="font-size: 0.8rem; color: var(--gold); margin-bottom: 15px; font-weight: bold;">AI INTERPRETATION</div>
         <div id="mcq-options"></div>
-        <button onclick="closeModal()" style="margin-top:10px; background:transparent; border:none; color:#555; cursor:pointer; font-size:0.6rem; text-decoration: underline;">CANCEL</button>
+        <button onclick="closeModal()" style="margin-top:15px; background:transparent; border:none; color:#666; cursor:pointer; font-size: 0.7rem;">CANCEL</button>
     </div>
 
     <script>
         const d = document.getElementById('display');
+        const grid = document.getElementById('button-grid');
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         let drawing = false;
@@ -98,18 +113,36 @@
             document.getElementById('photo-zone').style.display = (mode === 'photo') ? 'block' : 'none';
             
             if(mode === 'std' || mode === 'sci') renderButtons(mode);
-            if(mode === 'draw') setTimeout(initCanvas, 50);
+            if(mode === 'draw') setTimeout(initCanvas, 100); // Allow DOM to render before sizing
         }
 
+        // --- NEW TESSERACT WORKER API WITH MATH WHITELIST ---
         async function processAI(source) {
-            d.value = "NEURAL SCANNING...";
+            d.value = "LOADING AI ENGINE...";
             const input = (source === 'canvas') ? canvas : document.getElementById('file-input').files[0];
+            if(!input) return;
+
             try {
-                const result = await Tesseract.recognize(input, 'eng');
-                let text = result.data.text.toLowerCase().replace(/[^\d\+\-\*\/\(\)\.\^sincostan]/g, "");
-                if (text.length > 0) showMCQ(text);
-                else d.value = "RE-DRAW CLEARLY";
-            } catch (err) { d.value = "SCAN_ERROR"; }
+                // Initialize dedicated Math Worker
+                const worker = await Tesseract.createWorker('eng');
+                await worker.setParameters({
+                    tessedit_char_whitelist: '0123456789+-*/().=sincostan^', // Forces AI to ignore standard alphabet
+                });
+                
+                d.value = "SCANNING PIXELS...";
+                const result = await worker.recognize(input);
+                await worker.terminate(); // Free up memory
+
+                // Clean the output
+                let raw = result.data.text.toLowerCase().replace(/\s/g, "");
+                let processed = raw.replace(/x/g, '*').replace(/÷/g, '/');
+
+                if (processed.length > 0) showMCQ(processed);
+                else d.value = "WRITE BOLDER";
+            } catch (err) { 
+                console.error(err);
+                d.value = "SCAN_ERROR"; 
+            }
         }
 
         function showMCQ(raw) {
@@ -118,51 +151,51 @@
             options.innerHTML = '';
             modal.style.display = 'block';
 
-            // Generate 5 Smart Variations
-            let v1 = raw;
-            let v2 = raw.replace(/s/g, '5').replace(/z/g, '2').replace(/o/g, '0');
-            let v3 = raw.replace(/5/g, 's').replace(/2/g, 'z').replace(/0/g, 'o');
-            let v4 = raw.replace(/x/g, '*').replace(/÷/g, '/');
-            let variations = [...new Set([v1, v2, v3, v4])].slice(0, 4);
+            // Provide 3 variations
+            let variations = [...new Set([raw, raw.replace(/s/g, '5'), raw.replace(/\*/g, '+')])].slice(0,3);
 
             variations.forEach(g => {
                 const btn = document.createElement('button');
                 btn.className = 'mcq-btn';
-                btn.innerText = `Result: ${g}`;
+                btn.innerText = g;
                 btn.onclick = () => { d.value = g; solve(); closeModal(); };
                 options.appendChild(btn);
             });
 
-            // Final Manual Option
-            const editBtn = document.createElement('button');
-            editBtn.className = 'mcq-btn mcq-edit';
-            editBtn.innerText = "Manual Correction";
-            editBtn.onclick = () => { 
-                let manual = prompt("AI was close. Please correct the equation:", raw);
-                if(manual) { d.value = manual; solve(); }
-                closeModal(); 
+            // Ultimate Manual Fix Input
+            const manualBtn = document.createElement('button');
+            manualBtn.className = 'mcq-btn';
+            manualBtn.style.border = "1px dashed var(--gold)";
+            manualBtn.style.color = "var(--gold)";
+            manualBtn.innerText = "MANUAL FIX";
+            manualBtn.onclick = () => { 
+                let fix = prompt("Correct the math string (e.g., sin(45) * 2):", raw);
+                if(fix) { d.value = fix; solve(); }
+                closeModal();
             };
-            options.appendChild(editBtn);
+            options.appendChild(manualBtn);
         }
 
         function closeModal() { document.getElementById('verify-modal').style.display = 'none'; }
         
         function solve() { 
             try { 
+                // math.js evaluation
                 let exp = d.value.replace(/×/g, '*').replace(/÷/g, '/');
                 let res = math.evaluate(exp); 
                 d.value = math.format(res, {precision: 10}); 
             } catch (e) { d.value = "MATH_ERROR"; } 
         }
 
+        // --- CANVAS LOGIC FIXED ---
         function initCanvas() {
-            const rect = canvas.getBoundingClientRect();
-            canvas.width = rect.width;
-            canvas.height = rect.height;
+            const zone = document.getElementById('sketch-zone');
+            canvas.width = zone.clientWidth; 
+            canvas.height = 300;
             ctx.fillStyle = "black"; 
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.strokeStyle = 'white'; 
-            ctx.lineWidth = 12; 
+            ctx.lineWidth = 14; 
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
         }
@@ -177,37 +210,67 @@
         canvas.addEventListener('mousedown', (e) => { drawing = true; const p = getPos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); });
         canvas.addEventListener('mousemove', (e) => { if (!drawing) return; const p = getPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); });
         canvas.addEventListener('mouseup', () => drawing = false);
+        
+        // Touch support optimized
         canvas.addEventListener('touchstart', (e) => { drawing = true; const p = getPos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); e.preventDefault(); }, {passive: false});
         canvas.addEventListener('touchmove', (e) => { if (!drawing) return; const p = getPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); e.preventDefault(); }, {passive: false});
         canvas.addEventListener('touchend', () => drawing = false);
 
         function clearCanvas() { ctx.fillStyle = "black"; ctx.fillRect(0, 0, canvas.width, canvas.height); }
 
+        // --- PERFECT GRID MATRICES ---
         function renderButtons(mode) {
-            const grid = document.getElementById('button-grid');
             grid.innerHTML = '';
-            let btns = (mode === 'std') ? 
-                ['C', '/', '*', '⌫', '7', '8', '9', '-', '4', '5', '6', '+', '1', '2', '3', '.', '0', '='] : 
-                ['sin', 'cos', 'tan', 'sqrt', '(', ')', '^', '/', '7', '8', '9', '*', '4', '5', '6', '-', '1', '2', '3', '+', '0', '.', '⌫', 'C', '='];
             
-            grid.style.gridTemplateColumns = (mode === 'std') ? 'repeat(4, 1fr)' : 'repeat(6, 1fr)';
+            // Standard: 4 cols x 5 rows = 20 buttons
+            const stdBtns = [
+                'C', '⌫', '(', ')',
+                '7', '8', '9', '/',
+                '4', '5', '6', '*',
+                '1', '2', '3', '-',
+                '0', '.', '=', '+'
+            ];
+
+            // Scientific: 5 cols x 6 rows = 30 buttons
+            const sciBtns = [
+                'sin', 'cos', 'tan', 'C', '⌫',
+                'sqrt', '^', '(', ')', '/',
+                'log', '7', '8', '9', '*',
+                'pi', '4', '5', '6', '-',
+                'e', '1', '2', '3', '+',
+                'exp', '0', '00', '.', '='
+            ];
+
+            let activeBtns = (mode === 'std') ? stdBtns : sciBtns;
+            grid.style.gridTemplateColumns = (mode === 'std') ? 'repeat(4, 1fr)' : 'repeat(5, 1fr)';
             
-            btns.forEach(b => {
+            activeBtns.forEach(b => {
                 const btn = document.createElement('button');
-                btn.innerText = b; 
-                btn.style.height = '42px'; 
-                btn.style.background = '#1a1a1a'; 
-                btn.style.color = '#fff'; 
-                btn.style.border = 'none'; 
-                btn.style.borderRadius = '5px'; 
-                btn.style.fontSize = (mode === 'sci') ? '0.7rem' : '1rem';
-                if(b === '=') { btn.style.background = 'var(--gold)'; btn.style.color = 'black'; btn.onclick = solve; }
-                else if(b === 'C') btn.onclick = () => d.value = '0';
-                else if(b === '⌫') btn.onclick = () => d.value = d.value.slice(0, -1) || '0';
-                else btn.onclick = () => d.value = (d.value === '0') ? b : d.value + b;
+                btn.innerText = b;
+                btn.className = 'calc-btn';
+                
+                // Styling classifications
+                if (['/', '*', '-', '+', '^'].includes(b)) btn.classList.add('op');
+                if (['sin','cos','tan','sqrt','log','pi','e','exp'].includes(b)) btn.classList.add('sci');
+                if (b === '=') btn.classList.add('eq');
+
+                // Logic
+                btn.onclick = () => {
+                    if(b === '=') solve();
+                    else if(b === 'C') d.value = '0';
+                    else if(b === '⌫') d.value = d.value.slice(0, -1) || '0';
+                    else {
+                        let append = b;
+                        // Smart parentheses for functions
+                        if(['sin','cos','tan','sqrt','log'].includes(b)) append = b + '(';
+                        d.value = (d.value === '0') ? append : d.value + append;
+                    }
+                };
                 grid.appendChild(btn);
             });
         }
+        
+        // Initial load
         renderButtons('std');
     </script>
 </body>
